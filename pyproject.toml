@@ -1,0 +1,198 @@
+[project]
+name = "decent-array"
+version = "0.1.0"
+authors = [{name = "Simon Granström"}, {name = "Nicola Bastianello"}]
+maintainers = [{name = "Team Decent"}]
+description = "A library of array operations and linear algebra primitives for interoperability across ML frameworks."
+readme = "README.md"
+requires-python = ">=3.13"
+classifiers = [
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent",
+]
+license = "AGPL-3.0-only"
+dependencies = [
+  "numpy",
+]
+
+[project.urls]
+Documentation = "https://decent-array.readthedocs.io/en/latest/"
+Source = "https://github.com/team-decent/decent-array"
+Issues = "https://github.com/team-decent/decent-array/issues"
+
+[project.optional-dependencies]
+dev = [
+  "hatch",
+  "mypy",
+  "pytest",
+  "ruff",
+  "torch",
+  "torchvision",
+  "types-tensorflow",
+]
+dev-cpu = [
+  "tensorflow",
+  "jax",
+]
+dev-gpu = [
+  "tensorflow[and-cuda]",
+  "jax[cuda12]",
+]
+sphinx-tools = [
+  "sphinx",
+  "pydata-sphinx-theme",
+  "sphinxcontrib-bibtex",
+]
+
+
+[build-system]
+requires = ["hatchling", "hatch-mypyc"]
+build-backend = "hatchling.build"
+# Compile hot-path modules with mypyc when building wheels. End users installing from
+# a wheel get a precompiled .so; ``pip install -e .`` and source builds also run this
+# (a C compiler is required). The ``.py`` source remains shipped alongside the .so so
+# Python keeps a fallback if the extension fails to import. Tox envs that only need
+# the ``.py`` source (dev, dev-gpu, sphinx, mypy, ruff) opt out via
+# ``HATCH_BUILD_NO_HOOKS=true`` to keep their installs fast.
+[tool.hatch.build.targets.wheel.hooks.mypyc]
+dependencies = ["hatch-mypyc"]
+# Compile the Array wrapper plus the entire iop2 package as one mypyc group: keeping
+# them in a single compilation unit means cross-module calls (Array → backend, iop
+# function → backend) are direct compiled-to-compiled calls. New framework backends
+# get picked up automatically — no edits needed here. ``--ignore-missing-imports``
+# treats torch/jax/tensorflow types as ``Any`` when those packages aren't in the
+# build environment; the wrapper-side boundary cost is still removed.
+include = [
+  "decent_array/",
+]
+mypy-args = ["--ignore-missing-imports"]
+
+[tool.tox]
+envlist = ["dev", "mypy", "mypyc", "pytest", "ruff", "sphinx"]
+package = "editable"
+
+[tool.tox.env.dev]
+description = "Generate dev venv with all dependencies, active with `source .tox/dev/bin/activate`"
+set_env = { HATCH_BUILD_NO_HOOKS = "true" }
+deps = [
+  ".[dev]",
+  ".[dev-cpu]",
+  ".[sphinx-tools]",
+  "git+https://github.com/microsoft/python-type-stubs.git@main"
+]
+package = "editable"
+
+[tool.tox.env.dev-gpu]
+description = "Generate dev venv with all dependencies including GPU support, active with `source .tox/dev-gpu/bin/activate`"
+set_env = { PIP_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cu128", HATCH_BUILD_NO_HOOKS = "true" } # torch 2.11 uses CUDA 13.0 which seems to have broken linalg.norm, use cuda 12.8 for now
+deps = [
+  ".[dev]",
+  ".[dev-gpu]",
+  ".[sphinx-tools]",
+  "git+https://github.com/microsoft/python-type-stubs.git@main"
+]
+package = "editable"
+
+[tool.tox.env.sphinx]
+description = "Generate rst and html files using sphinx"
+set_env = { HATCH_BUILD_NO_HOOKS = "true" }
+skip_install = true
+allowlist_externals = ["tox"]
+deps = [".[sphinx-tools]"]
+commands = [
+  ["tox", "-e", "clean-mypyc"],  # ensure .py source files are used for doc generation, not mypyc-compiled .so
+  ["sphinx-apidoc", "-o", "docs/source/api", "decent_array", "--separate", "--no-toc", "--templatedir=docs/source/_templates"],
+  ["sphinx-build", "-W", "-E", "-b", "html", "docs/source", "docs/build/html"]
+]
+
+[tool.tox.env.mypy]
+description = "Run mypy (static type checker)"
+set_env = { HATCH_BUILD_NO_HOOKS = "true" }
+deps = [".[dev]", ".[dev-cpu]", "git+https://github.com/microsoft/python-type-stubs.git@main"]
+commands = [["mypy", "decent_array"]]
+
+[tool.tox.env.clean-mypyc]
+description = "Remove mypyc-compiled artifacts so Python imports the .py source again (use during dev iteration)"
+set_env = { HATCH_BUILD_NO_HOOKS = "true" }
+skip_install = true
+deps = []
+commands = [
+  ["python", "-c", "import pathlib; ps = list(pathlib.Path('.').glob('decent_array/**/*.so')) + list(pathlib.Path('.').glob('*__mypyc.cpython-*.so')); [p.unlink() for p in ps]; print('removed', len(ps), 'compiled artifact(s)')"],
+]
+
+[tool.tox.env.mypyc]
+description = "Compile hot-path modules in place with mypyc (drops .so files alongside the .py source)"
+deps = ["mypy", "numpy", "setuptools"]
+skip_install = true
+allowlist_externals = ["tox"]
+# First command clears any stale shared-runtime ``.so`` at the project root from a
+# previous compile (its name is hash-derived from the file list, so changing inputs
+# leaves orphans); second command compiles the Array module + entire iop2 package
+# (including ``_abstracts``) as one group so cross-module dispatch (Array →
+# _Backend.add → concrete backend method) is native compiled-to-compiled.
+commands = [
+  ["tox", "-e", "clean-mypyc"],  # ensure we're compiling from a clean slate with no stale .so files
+  ["python", "-m", "mypyc",
+    "--ignore-missing-imports",
+    "decent_array/",
+  ],
+]
+
+[tool.tox.env.pytest]
+description = "Run pytest (test executor)"
+deps = [".[dev]", ".[dev-cpu]"]
+commands = [["pytest", "-rs"]]
+
+[tool.tox.env.ruff]
+description = "Run ruff (format and style checker)"
+deps = ["ruff"]
+set_env = { HATCH_BUILD_NO_HOOKS = "true" }
+skip_install = true
+commands = [
+  ["ruff", "check", "decent_array"],
+  ["ruff", "format", "decent_array", "--check"]
+]
+
+[tool.tox.labels]
+lint = ["ruff", "mypy"]
+
+[tool.pytest.ini_options]
+addopts = "-q -W error"
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+
+[tool.ruff]
+lint.flake8-annotations.mypy-init-return = true
+lint.select = ["ALL"]
+lint.ignore = [
+  "BLE001",   # blind-except, complains when catching `Exception`
+  "C901",     # complex-structure, complains when there are many branches
+  "COM812",   # missing-trailing-comma, may cause conflicts when used with the formatter
+  "CPY001",   # missing-copyright-notice
+  "D100",     # undocumented-public-module
+  "D104",     # undocumented-public-package
+  "D107",     # undocumented-public-init
+  "D203",     # incorrect-blank-line-before-class, incompatible with no-blank-line-before-class (D211)
+  "D212",     # multi-line-summary-first-line, incompatible with multi-line-summary-second-line (D213)
+  "D415",     # missing-terminal-punctuation, D400 already enforces first line to end with period
+  "DOC201",   # docstring-missing-returns, always documenting the return value is too verbose
+  "EM101",    # raw-string-in-exception, complains about putting raw string as error msg
+  "EM102",    # f-string-in-exception, complains about putting f string as error msg
+  "FURB140",  # reimplemented-starmap, wants to replace comprehensions with the less efficient itertools.starmap
+  "PLR0913",  # too-many-arguments, complains when there are more than 5 arguments
+  "PLR2004",  # magic-value-comparison, complains about dimension checks in cost functions
+  "PLR6301",  # no-self-use, complains when self is unused even when implementing an abstract method
+  "S311",     # suspicious-non-cryptographic-random-usage, complains about `random.random()`
+  "TC001",    # typing-only-first-party-import, reduced rt overhead but slower development and messy imports
+  "TC002",    # typing-only-third-party-import, reduced rt overhead but slower development and messy imports
+  "TC003",    # typing-only-standard-library-import, reduced rt overhead but slower development and messy imports
+  "TRY003",   # raise-vanilla-args, complains about simple error messages like `ValueError('Matrix A must be 2D')`
+  "FBT001",   # boolean-type-hint-positional-argument, complains about bool args with default values in functions
+  "FBT002",   # boolean-default-value-positional-argument, complains about bool args with default values in functions
+  "ICN001",   # unconventional-import-alias, complains about common import aliases like `import numpy as np` but it doesn't work for most libraries
+  "PYI041",   # Removes warning for redundant types in cases like int | float | complex where complex already covers int and float, but we want to keep the union for readability and explicitness about supported types.
+]
+preview = true
+line-length = 120

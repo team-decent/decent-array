@@ -1,0 +1,13 @@
+**/__pycache__
+**/build
+*.egg-info
+*.so
+.DS_Store
+.mypy_cache
+.tox
+.vscode
+dist
+pyrightconfig.json
+.claude
+*.py[codz]
+*$py.class

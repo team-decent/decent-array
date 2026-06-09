@@ -11,8 +11,8 @@ Operator contract is *strict*: binary arithmetic and indexing accept either anot
 
 Hot-path notes:
 
-* ``__add__``/``__sub__``/``__mul__``/``__truediv__``/``__matmul__``, the unary
-  ``__neg__``/``__abs__``/``__pow__``, the comparisons ``__eq__``/``__ne__``/``__lt__``/
+* ``__add__``/``__sub__``/``__mul__``/``__truediv__``/``__matmul__``, ``__floordiv__``, ``__mod__``,
+  the unary ``__neg__``/``__abs__``/``__pow__``, the comparisons ``__eq__``/``__ne__``/``__lt__``/
   ``__le__``/``__gt__``/``__ge__`` and the bitwise ``__and__``/``__rand__`` are
   inlined: every supported framework's tensor implements the equivalent operator
   natively with numpy-equivalent semantics, so routing through the interoperability layer
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from decent_array.interoperability._abstracts import Backend
-    from decent_array.types import ArrayKey, SupportedArrayTypes, SupportedDevices
+    from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, _STRING_TO_DTYPE
 
 
 _BACKEND_INSTANCE: Backend | None = None
@@ -119,6 +119,22 @@ class Array:  # noqa: PLR0904
         """Return the true division of ``other`` by the array."""
         return Array(other / self.value)
 
+    def __floordiv__(self, other: int | float | Array, /) -> Array:
+        """Return the floor division of the array by ``other``."""
+        return Array(self.value // (other.value if type(other) is Array else other))
+
+    def __rfloordiv__(self, other: int | float | Array, /) -> Array:
+        """Return the floor division of ``other`` by the array."""
+        return Array(other // self.value)
+
+    def __mod__(self, other: int | float | Array, /) -> Array:
+        """Return the remainder after floor division of the array by ``other``."""
+        return Array(self.value % (other.value if type(other) is Array else other))
+
+    def __rmod__(self, other: int | float | Array, /) -> Array:
+        """Return the floor division of ``other`` by the array."""
+        return Array(other % self.value)
+
     def __matmul__(self, other: Array, /) -> Array:
         """Return the matrix multiplication of the array with ``other``."""
         return Array(self.value @ other.value)
@@ -128,11 +144,15 @@ class Array:  # noqa: PLR0904
         return Array(other.value @ self.value)
 
     def __pow__(self, other: int | float | complex | Array, /) -> Array:
-        """Exponentiate the array by a scalar power."""
+        """Exponentiate the array element-wise."""
         # numpy/torch/jax/tf all implement ``tensor ** p`` with semantics matching the
         # backend's ``pow``; routing through the backend would cost an extra method
         # call for no behavioral difference.
         return Array(self.value ** (other.value if type(other) is Array else other))
+
+    def __rpow__(self, other: Array, /) -> Array:
+        """Exponentiate the array element-wise."""
+        return Array(self.value ** other)
 
     # Comparisons ----------------------------------------------------------
     #
@@ -189,6 +209,42 @@ class Array:  # noqa: PLR0904
         """Element-wise bitwise/logical AND with the array on the right."""
         return Array((other.value if type(other) is Array else other) & self.value)
 
+    def __or__(self, other: bool | int | Array, /) -> Array:
+        """Element-wise bitwise/logical OR."""
+        return Array(self.value | (other.value if type(other) is Array else other))
+
+    def __ror__(self, other: bool | int | Array, /) -> Array:
+        """Element-wise bitwise/logical OR with the array on the right."""
+        return Array((other.value if type(other) is Array else other) | self.value)
+
+    def __xor__(self, other: bool | int | Array, /) -> Array:
+        """Element-wise bitwise/logical XOR."""
+        return Array(self.value ^ (other.value if type(other) is Array else other))
+
+    def __rxor__(self, other: bool | int | Array, /) -> Array:
+        """Element-wise bitwise/logical XOR with the array on the right."""
+        return Array((other.value if type(other) is Array else other) ^ self.value)
+
+    def __lshift__(self, other: int | Array, /) -> Array:
+        """Element-wise bitwise left shift as specified by int/int array."""
+        return Array(self.value << (other.value if type(other) is Array else other))
+
+    def __rlshift__(self, other: int | Array, /) -> Array:
+        """Element-wise bitwise left shift as specified by int/int array on the right."""
+        return Array((other.value if type(other) is Array else other) << self.value)
+
+    def __rshift__(self, other: int | Array, /) -> Array:
+        """Element-wise bitwise right shift as specified by int/int array."""
+        return Array(self.value >> (other.value if type(other) is Array else other))
+
+    def __rrshift__(self, other: int | Array, /) -> Array:
+        """Element-wise bitwise right shift as specified by int/int array on the right."""
+        return Array((other.value if type(other) is Array else other) >> self.value)
+
+    def __invert__(self) -> Array:
+        """Element-wise bitwise/logical NOT."""
+        return Array(~self.value)
+
     # In-place arithmetic --------------------------------------------------
     #
     # The backend handles the framework's mutability semantics: numpy/pytorch mutate
@@ -222,6 +278,10 @@ class Array:  # noqa: PLR0904
         # Native ``-tensor`` matches the backend's ``negative`` wrapper across all
         # supported frameworks, so the indirection is not needed.
         return Array(-self.value)
+
+    def __pos__(self) -> Array:
+        """Return the array itself."""
+        return self
 
     def __abs__(self) -> Array:
         """Return the absolute value of the array."""
@@ -277,6 +337,25 @@ class Array:  # noqa: PLR0904
     def ndim(self) -> int:
         """Return the number of dimensions of the array."""
         return self._backend.ndim(self)
+
+    @property
+    def dtype(self) -> DTypes:
+        """
+        Return dtype of the Array as item of DTypes enum.
+
+        Raises:
+            ValueError: for dtypes that are not supported by all decent-array functions
+
+        """
+        # get framework-native dtype as string
+        # split takes care of types with names like "torch.float32", "tf.float32"
+        dtype_name = str(self.value.dtype).split(".")[-1]
+
+        dtype = _STRING_TO_DTYPE.get(dtype_name)
+        if dtype is None:
+            raise ValueError(f"dtype {self.value.dtype} is not supported by all decent-array functions.")
+
+        return dtype
 
     @property
     def transpose(self) -> Array:

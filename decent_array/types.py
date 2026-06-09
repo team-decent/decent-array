@@ -70,3 +70,6 @@ class DTypes(Enum):
     FLOAT64 = "float64"
     COMPLEX64 = "complex64"
     COMPLEX128 = "complex128"
+
+
+_STRING_TO_DTYPE = {dt.value: dt for dt in DTypes}

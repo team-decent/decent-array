@@ -103,6 +103,10 @@ class Backend(ABC):  # noqa: PLR0904
         """Transpose ``x``; ``None`` reverses the dimensions."""
 
     @abstractmethod
+    def matrix_transpose(self, x: Array) -> Array:
+        """Transpose the innermost two dimensions of ``x``."""
+
+    @abstractmethod
     def shape(self, x: Array) -> tuple[int, ...]:
         """Return the shape of ``x``."""
 
@@ -143,6 +147,10 @@ class Backend(ABC):  # noqa: PLR0904
     @abstractmethod
     def matmul(self, x1: Array, x2: Array) -> Array:
         """Matrix multiplication of two arrays."""
+
+    @abstractmethod
+    def imatmul[T: Array](self, x1: T, x2: Array) -> Array:
+        """In-place matrix multiplication."""
 
     @abstractmethod
     def vector_norm(
@@ -217,8 +225,28 @@ class Backend(ABC):  # noqa: PLR0904
         """In-place element-wise division."""
 
     @abstractmethod
+    def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        """Element-wise floor division."""
+
+    @abstractmethod
+    def ifloordiv[T: Array](self, x1: T, x2: int | float | complex | Array) -> Array:
+        """In-place floor division."""
+
+    @abstractmethod
+    def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        """Element-wise remainder after floor division."""
+
+    @abstractmethod
+    def imod[T: Array](self, x1: T, x2: int | float | Array) -> Array:
+        """In-place remainder after floor division."""
+
+    @abstractmethod
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
         """Raise ``x1`` to power ``x2``."""
+
+    @abstractmethod
+    def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> Array:
+        """In-place raise ``x1`` to power ``x2``."""
 
     @abstractmethod
     def negative(self, x: Array) -> Array:
@@ -265,6 +293,46 @@ class Backend(ABC):  # noqa: PLR0904
     @abstractmethod
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
         """Element-wise bitwise/logical AND."""
+
+    @abstractmethod
+    def iand[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+        """In-place bitwise/logical AND."""
+
+    @abstractmethod
+    def bitwise_invert(self, x: Array) -> Array:
+        """Element-wise bitwise/logical NOT."""
+
+    @abstractmethod
+    def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
+        """Element-wise bitwise/logical OR."""
+
+    @abstractmethod
+    def ior[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+        """In-place bitwise/logical OR."""
+
+    @abstractmethod
+    def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
+        """Element-wise bitwise/logical XOR."""
+
+    @abstractmethod
+    def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+        """In-place bitwise/logical XOR."""
+
+    @abstractmethod
+    def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
+        """Element-wise bitwise left shift."""
+
+    @abstractmethod
+    def ilshift[T: Array](self, x1: T, x2: int | Array) -> Array:
+        """In-place bitwise left shift."""
+
+    @abstractmethod
+    def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
+        """Element-wise bitwise right shift."""
+
+    @abstractmethod
+    def irshift[T: Array](self, x1: T, x2: int | Array) -> Array:
+        """In-place bitwise right shift."""
 
     # Operators -----------------------------------------------------------
 

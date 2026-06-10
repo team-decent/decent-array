@@ -13,7 +13,14 @@ Typical usage::
 """
 
 from ._backend_manager import default_device, set_backend
-from ._iop.bit_operators import bitwise_and
+from ._iop.bit_operators import (
+    bitwise_and,
+    bitwise_invert,
+    bitwise_left_shift,
+    bitwise_or,
+    bitwise_right_shift,
+    bitwise_xor,
+)
 from ._iop.comparasion import equal, greater, greater_equal, less, less_equal, not_equal
 from ._iop.creation import eye, ones, ones_like, zeros, zeros_like
 from ._iop.linalg import dot, matmul, norm, vecdot, vector_norm
@@ -26,6 +33,7 @@ from ._iop.manipulations import (
     expand_dims,
     from_numpy,
     from_numpy_like,
+    matrix_transpose,
     ndim,
     reshape,
     shape,
@@ -36,7 +44,20 @@ from ._iop.manipulations import (
     transpose,
     unsqueeze,
 )
-from ._iop.math import abs, absolute, add, divide, multiply, negative, pow, sqrt, subtract  # noqa: A004
+from ._iop.math import (
+    abs,  # noqa: A004
+    absolute,
+    add,
+    divide,
+    floor_divide,
+    multiply,
+    negative,
+    positive,
+    pow,  # noqa: A004
+    remainder,
+    sqrt,
+    subtract,
+)
 from ._iop.operators import argmax, argmin, maximum, sign
 from ._iop.reductions import all, any, max, mean, min, sum  # noqa: A004
 from ._iop.rng import (
@@ -65,6 +86,11 @@ __all__ = [
     "asarray",
     "astype",
     "bitwise_and",
+    "bitwise_invert",
+    "bitwise_left_shift",
+    "bitwise_or",
+    "bitwise_right_shift",
+    "bitwise_xor",
     "choice",
     "copy",
     "default_device",
@@ -77,6 +103,7 @@ __all__ = [
     "equal",
     "expand_dims",
     "eye",
+    "floor_divide",
     "from_numpy",
     "from_numpy_like",
     "get_numpy_rng",
@@ -87,6 +114,7 @@ __all__ = [
     "less",
     "less_equal",
     "matmul",
+    "matrix_transpose",
     "max",
     "maximum",
     "mean",
@@ -100,7 +128,9 @@ __all__ = [
     "not_equal",
     "ones",
     "ones_like",
+    "positive",
     "pow",
+    "remainder",
     "reshape",
     "set_backend",
     "set_rng_state",

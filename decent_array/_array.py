@@ -29,12 +29,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Self
 
 from decent_array.interoperability._backend_manager import register_backend_listener
+from decent_array.types import _STRING_TO_DTYPE
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from decent_array.interoperability._abstracts import Backend
-    from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, _STRING_TO_DTYPE
+    from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices
 
 
 _BACKEND_INSTANCE: Backend | None = None
@@ -152,7 +153,7 @@ class Array:  # noqa: PLR0904
 
     def __rpow__(self, other: Array, /) -> Array:
         """Exponentiate the array element-wise."""
-        return Array(self.value ** other)
+        return Array(self.value**other)
 
     # Comparisons ----------------------------------------------------------
     #
@@ -227,19 +228,19 @@ class Array:  # noqa: PLR0904
 
     def __lshift__(self, other: int | Array, /) -> Array:
         """Element-wise bitwise left shift as specified by int/int array."""
-        return Array(self.value << (other.value if type(other) is Array else other))
+        return self._backend.bitwise_left_shift(self, other)
 
     def __rlshift__(self, other: int | Array, /) -> Array:
         """Element-wise bitwise left shift as specified by int/int array on the right."""
-        return Array((other.value if type(other) is Array else other) << self.value)
+        return self._backend.bitwise_left_shift(other, self)
 
     def __rshift__(self, other: int | Array, /) -> Array:
         """Element-wise bitwise right shift as specified by int/int array."""
-        return Array(self.value >> (other.value if type(other) is Array else other))
+        return self._backend.bitwise_right_shift(self, other)
 
     def __rrshift__(self, other: int | Array, /) -> Array:
         """Element-wise bitwise right shift as specified by int/int array on the right."""
-        return Array((other.value if type(other) is Array else other) >> self.value)
+        return self._backend.bitwise_right_shift(other, self)
 
     def __invert__(self) -> Array:
         """Element-wise bitwise/logical NOT."""
@@ -382,6 +383,11 @@ class Array:  # noqa: PLR0904
     def T(self) -> Array:  # noqa: N802
         """Return a transposed view of the array."""
         return self.transpose
+
+    @property
+    def mT(self) -> Array:  # noqa: N802
+        """Return the matrix transpose (last two dimensions swapped)."""
+        return self._backend.matrix_transpose(self)
 
     @property
     def any(self) -> bool:

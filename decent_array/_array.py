@@ -311,6 +311,22 @@ class Array:  # noqa: PLR0904
         """Coerce a scalar array to a Python float."""
         return float(self._backend.squeeze(self).value)
 
+    def __bool__(self) -> bool:
+        """Coerce a scalar array to a Python bool."""
+        return bool(self._backend.squeeze(self).value)
+
+    def __int__(self) -> int:
+        """Coerce a scalar array to a Python int."""
+        return int(self._backend.squeeze(self).value)
+
+    def __complex__(self) -> complex:
+        """Coerce a scalar array to a Python complex."""
+        return complex(self._backend.squeeze(self).value)
+
+    def __index__(self) -> int:
+        """Coerce a scalar array to a Python int."""
+        return int(self._backend.squeeze(self).value)
+
     # Repr -----------------------------------------------------------------
 
     def __repr__(self) -> str:
@@ -348,7 +364,7 @@ class Array:  # noqa: PLR0904
 
         """
         # get framework-native dtype as string
-        # split takes care of types with names like "torch.float32", "tf.float32"
+        # split takes care of types with names like "torch.float32"
         dtype_name = str(self.value.dtype).split(".")[-1]
 
         dtype = _STRING_TO_DTYPE.get(dtype_name)

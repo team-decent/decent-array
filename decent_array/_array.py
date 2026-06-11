@@ -151,9 +151,9 @@ class Array:  # noqa: PLR0904
         # call for no behavioral difference.
         return Array(self.value ** (other.value if type(other) is Array else other))
 
-    def __rpow__(self, other: Array, /) -> Array:
-        """Exponentiate the array element-wise."""
-        return Array(self.value**other)
+    def __rpow__(self, other: int | float | complex | Array, /) -> Array:
+        """Exponentiate other element-wise by array."""
+        return Array(other**self.value)
 
     # Comparisons ----------------------------------------------------------
     #

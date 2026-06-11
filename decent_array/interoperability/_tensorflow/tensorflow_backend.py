@@ -130,8 +130,6 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     def matrix_transpose(self, x: Array) -> Array:
         v = x.value
         rank = v.shape.ndims
-        if rank is None:
-            rank = int(tf.rank(v).numpy())
         if rank < 2:
             raise ValueError(f"matrix_transpose requires an array with at least 2 dimensions, got {rank}-D")
         return Array(tf.linalg.matrix_transpose(v))

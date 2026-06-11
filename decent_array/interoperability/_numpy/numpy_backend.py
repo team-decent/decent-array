@@ -121,9 +121,6 @@ class NumpyBackend(Backend):  # noqa: PLR0904
         v = x.value
         if v.ndim < 2:
             raise ValueError(f"matrix_transpose requires an array with at least 2 dimensions, got {v.ndim}-D")
-        mt = getattr(v, "mT", None)
-        if mt is not None:
-            return Array(mt)
         return Array(np.swapaxes(v, -1, -2))
 
     def shape(self, x: Array) -> tuple[int, ...]:

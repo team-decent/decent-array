@@ -257,7 +257,7 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
         return Array(tf.math.floordiv(_unwrap(x1), _unwrap(x2)))
 
-    def ifloordiv[T: Array](self, x1: T, x2: int | float | complex | Array) -> Array:
+    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> Array:
         x1.value = tf.math.floordiv(x1.value, _unwrap(x2))
         return x1
 

@@ -229,7 +229,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Element-wise floor division."""
 
     @abstractmethod
-    def ifloordiv[T: Array](self, x1: T, x2: int | float | complex | Array) -> Array:
+    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> Array:
         """In-place floor division."""
 
     @abstractmethod

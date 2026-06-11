@@ -133,7 +133,7 @@ class Array:  # noqa: PLR0904
         return Array(self.value % (other.value if type(other) is Array else other))
 
     def __rmod__(self, other: int | float | Array, /) -> Array:
-        """Return the floor division of ``other`` by the array."""
+        """Return the remainder after floor division of ``other`` by the array."""
         return Array(other % self.value)
 
     def __matmul__(self, other: Array, /) -> Array:
@@ -270,6 +270,51 @@ class Array:  # noqa: PLR0904
     def __itruediv__(self, other: int | float | complex | Array, /) -> Self:
         """In-place true division."""
         self._backend.idivide(self, other)
+        return self
+
+    def __ifloordiv__(self, other: int | float | Array) -> Self:
+        """In-place floor division."""
+        self._backend.ifloordiv(self, other)
+        return self
+
+    def __imod__(self, other: int | float | Array) -> Self:
+        """In-place remainder after floor division."""
+        self._backend.imod(self, other)
+        return self
+
+    def __ipow__(self, other: int | float | complex | Array) -> Self:
+        """In-place raise array to power ``other``."""
+        self._backend.ipow(self, other)
+        return self
+
+    def __imatmul__(self, other: Array) -> Self:
+        """In-place matrix multiplication."""
+        self._backend.imatmul(self, other)
+        return self
+
+    def __iand__(self, other: bool | int | Array) -> Self:
+        """In-place bitwise/logical AND."""
+        self._backend.iand(self, other)
+        return self
+
+    def __ior__(self, other: bool | int | Array) -> Self:
+        """In-place bitwise/logical OR."""
+        self._backend.ior(self, other)
+        return self
+
+    def __ixor__(self, other: bool | int | Array) -> Self:
+        """In-place bitwise/logical XOR."""
+        self._backend.ixor(self, other)
+        return self
+
+    def __ilshift__(self, other: int | Array) -> Self:
+        """In-place bitwise left shift."""
+        self._backend.ilshift(self, other)
+        return self
+
+    def __irshift__(self, other: int | Array) -> Self:
+        """In-place bitwise right shift."""
+        self._backend.irshift(self, other)
         return self
 
     # Unary ----------------------------------------------------------------

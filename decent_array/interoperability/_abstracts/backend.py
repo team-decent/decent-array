@@ -149,7 +149,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Matrix multiplication of two arrays."""
 
     @abstractmethod
-    def imatmul[T: Array](self, x1: T, x2: Array) -> Array:
+    def imatmul[T: Array](self, x1: T, x2: Array) -> T:
         """In-place matrix multiplication."""
 
     @abstractmethod
@@ -229,7 +229,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Element-wise floor division."""
 
     @abstractmethod
-    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> Array:
+    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
         """In-place floor division."""
 
     @abstractmethod
@@ -237,7 +237,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Element-wise remainder after floor division."""
 
     @abstractmethod
-    def imod[T: Array](self, x1: T, x2: int | float | Array) -> Array:
+    def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
         """In-place remainder after floor division."""
 
     @abstractmethod
@@ -245,7 +245,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Raise ``x1`` to power ``x2``."""
 
     @abstractmethod
-    def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> Array:
+    def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
         """In-place raise ``x1`` to power ``x2``."""
 
     @abstractmethod
@@ -295,7 +295,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Element-wise bitwise/logical AND."""
 
     @abstractmethod
-    def iand[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+    def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
         """In-place bitwise/logical AND."""
 
     @abstractmethod
@@ -307,7 +307,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Element-wise bitwise/logical OR."""
 
     @abstractmethod
-    def ior[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+    def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
         """In-place bitwise/logical OR."""
 
     @abstractmethod
@@ -315,7 +315,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Element-wise bitwise/logical XOR."""
 
     @abstractmethod
-    def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+    def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
         """In-place bitwise/logical XOR."""
 
     @abstractmethod
@@ -323,7 +323,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Element-wise bitwise left shift."""
 
     @abstractmethod
-    def ilshift[T: Array](self, x1: T, x2: int | Array) -> Array:
+    def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
         """In-place bitwise left shift."""
 
     @abstractmethod
@@ -331,7 +331,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Element-wise bitwise right shift."""
 
     @abstractmethod
-    def irshift[T: Array](self, x1: T, x2: int | Array) -> Array:
+    def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
         """In-place bitwise right shift."""
 
     # Operators -----------------------------------------------------------

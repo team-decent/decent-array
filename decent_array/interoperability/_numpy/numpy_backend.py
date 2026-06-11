@@ -161,7 +161,7 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     def matmul(self, x1: Array, x2: Array) -> Array:
         return Array(x1.value @ x2.value)
 
-    def imatmul[T: Array](self, x1: T, x2: Array) -> Array:
+    def imatmul[T: Array](self, x1: T, x2: Array) -> T:
         x1.value @= x2.value
         return x1
 
@@ -228,21 +228,21 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
         return Array(np.floor_divide(_unwrap(x1), _unwrap(x2)))
 
-    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> Array:
+    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
         x1.value //= _unwrap(x2)
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
         return Array(np.remainder(_unwrap(x1), _unwrap(x2)))
 
-    def imod[T: Array](self, x1: T, x2: int | float | Array) -> Array:
+    def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
         x1.value %= _unwrap(x2)
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
         return Array(np.power(_unwrap(x1), _unwrap(x2)))
 
-    def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> Array:
+    def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
         x1.value **= _unwrap(x2)
         return x1
 
@@ -280,7 +280,7 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
         return Array(np.bitwise_and(_unwrap(x1), _unwrap(x2)))
 
-    def iand[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+    def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
         x1.value &= _unwrap(x2)
         return x1
 
@@ -290,28 +290,28 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
         return Array(np.bitwise_or(_unwrap(x1), _unwrap(x2)))
 
-    def ior[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+    def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
         x1.value |= _unwrap(x2)
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
         return Array(np.bitwise_xor(_unwrap(x1), _unwrap(x2)))
 
-    def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+    def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
         x1.value ^= _unwrap(x2)
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
         return Array(np.left_shift(_unwrap(x1), _unwrap(x2)))
 
-    def ilshift[T: Array](self, x1: T, x2: int | Array) -> Array:
+    def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
         x1.value <<= _unwrap(x2)
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
         return Array(np.right_shift(_unwrap(x1), _unwrap(x2)))
 
-    def irshift[T: Array](self, x1: T, x2: int | Array) -> Array:
+    def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
         x1.value >>= _unwrap(x2)
         return x1
 

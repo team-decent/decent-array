@@ -119,6 +119,8 @@ def negative(x: Array) -> Array:
 
 def positive(x: Array) -> Array:
     """Return the array itself."""
+    if _BACKEND_INSTANCE is None:
+        raise _error
     return x
 
 

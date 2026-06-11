@@ -130,7 +130,7 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     def matrix_transpose(self, x: Array) -> Array:
         v = x.value
         rank = v.shape.ndims
-        if rank < 2:
+        if rank is not None and rank < 2:
             raise ValueError(f"matrix_transpose requires an array with at least 2 dimensions, got {rank}-D")
         return Array(tf.linalg.matrix_transpose(v))
 
@@ -181,7 +181,7 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
             return Array(tf.tensordot(a, b, axes=1))
         return Array(a @ b)
 
-    def imatmul[T: Array](self, x1: T, x2: Array) -> Array:
+    def imatmul[T: Array](self, x1: T, x2: Array) -> T:
         a, b = x1.value, x2.value
         if a.shape.ndims is None or b.shape.ndims is None or a.shape.ndims < 2 or b.shape.ndims < 2:
             x1.value = tf.tensordot(a, b, axes=1)
@@ -257,21 +257,21 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
         return Array(tf.math.floordiv(_unwrap(x1), _unwrap(x2)))
 
-    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> Array:
+    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
         x1.value = tf.math.floordiv(x1.value, _unwrap(x2))
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
         return Array(tf.math.floormod(_unwrap(x1), _unwrap(x2)))
 
-    def imod[T: Array](self, x1: T, x2: int | float | Array) -> Array:
+    def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
         x1.value = tf.math.floormod(x1.value, _unwrap(x2))
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
         return Array(tf.pow(_unwrap(x1), _unwrap(x2)))
 
-    def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> Array:
+    def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
         x1.value = tf.pow(x1.value, _unwrap(x2))
         return x1
 
@@ -312,7 +312,7 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
         return Array(_unwrap(x1) & _unwrap(x2))
 
-    def iand[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+    def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
         x1.value &= _unwrap(x2)
         return x1
 
@@ -322,28 +322,28 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
         return Array(_unwrap(x1) | _unwrap(x2))
 
-    def ior[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+    def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
         x1.value |= _unwrap(x2)
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
         return Array(_unwrap(x1) ^ _unwrap(x2))
 
-    def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> Array:
+    def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
         x1.value ^= _unwrap(x2)
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
         return Array(tf.bitwise.left_shift(_unwrap(x1), _unwrap(x2)))
 
-    def ilshift[T: Array](self, x1: T, x2: int | Array) -> Array:
+    def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
         x1.value = tf.bitwise.left_shift(x1.value, _unwrap(x2))
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
         return Array(tf.bitwise.right_shift(_unwrap(x1), _unwrap(x2)))
 
-    def irshift[T: Array](self, x1: T, x2: int | Array) -> Array:
+    def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
         x1.value = tf.bitwise.right_shift(x1.value, _unwrap(x2))
         return x1
 

@@ -104,6 +104,9 @@ class DTypes(Enum):
     COMPLEX128 = "complex128"
 
 
+_STRING_TO_DTYPE = {dt.value: dt for dt in DTypes}
+
+
 class dtype:  # noqa: N801
     """Base class for dtypes."""
 

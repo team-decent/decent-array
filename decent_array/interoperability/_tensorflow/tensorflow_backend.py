@@ -127,6 +127,13 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     def transpose(self, x: Array, axis: tuple[int, ...] | None = None) -> Array:
         return Array(tf.transpose(x.value, perm=axis))
 
+    def matrix_transpose(self, x: Array) -> Array:
+        v = x.value
+        rank = v.shape.ndims
+        if rank is not None and rank < 2:
+            raise ValueError(f"matrix_transpose requires an array with at least 2 dimensions, got {rank}-D")
+        return Array(tf.linalg.matrix_transpose(v))
+
     def shape(self, x: Array) -> tuple[int, ...]:
         return cast("tuple[int, ...]", tuple(x.value.shape))
 
@@ -173,6 +180,14 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
         if a.shape.ndims is None or b.shape.ndims is None or a.shape.ndims < 2 or b.shape.ndims < 2:
             return Array(tf.tensordot(a, b, axes=1))
         return Array(a @ b)
+
+    def imatmul[T: Array](self, x1: T, x2: Array) -> T:
+        a, b = x1.value, x2.value
+        if a.shape.ndims is None or b.shape.ndims is None or a.shape.ndims < 2 or b.shape.ndims < 2:
+            x1.value = tf.tensordot(a, b, axes=1)
+        else:
+            x1.value = a @ b
+        return x1
 
     def vector_norm(
         self,
@@ -239,8 +254,26 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
         x1.value = tf.divide(x1.value, _unwrap(x2))
         return x1
 
+    def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        return Array(tf.math.floordiv(_unwrap(x1), _unwrap(x2)))
+
+    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
+        x1.value = tf.math.floordiv(x1.value, _unwrap(x2))
+        return x1
+
+    def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        return Array(tf.math.floormod(_unwrap(x1), _unwrap(x2)))
+
+    def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
+        x1.value = tf.math.floormod(x1.value, _unwrap(x2))
+        return x1
+
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
         return Array(tf.pow(_unwrap(x1), _unwrap(x2)))
+
+    def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
+        x1.value = tf.pow(x1.value, _unwrap(x2))
+        return x1
 
     def negative(self, x: Array) -> Array:
         return Array(tf.negative(x.value))
@@ -276,8 +309,43 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     # operator semantics. Calling either named function directly here would constrain
     # us to one dtype family.
 
-    def bitwise_and(self, x1: int | Array, x2: int | Array) -> Array:
+    def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
         return Array(_unwrap(x1) & _unwrap(x2))
+
+    def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
+        x1.value &= _unwrap(x2)
+        return x1
+
+    def bitwise_invert(self, x: Array) -> Array:
+        return Array(~x.value)
+
+    def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
+        return Array(_unwrap(x1) | _unwrap(x2))
+
+    def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
+        x1.value |= _unwrap(x2)
+        return x1
+
+    def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
+        return Array(_unwrap(x1) ^ _unwrap(x2))
+
+    def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
+        x1.value ^= _unwrap(x2)
+        return x1
+
+    def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
+        return Array(tf.bitwise.left_shift(_unwrap(x1), _unwrap(x2)))
+
+    def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
+        x1.value = tf.bitwise.left_shift(x1.value, _unwrap(x2))
+        return x1
+
+    def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
+        return Array(tf.bitwise.right_shift(_unwrap(x1), _unwrap(x2)))
+
+    def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
+        x1.value = tf.bitwise.right_shift(x1.value, _unwrap(x2))
+        return x1
 
     # Operators
 

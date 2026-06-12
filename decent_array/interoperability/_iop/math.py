@@ -89,6 +89,20 @@ def idivide[T: Array](x1: T, x2: int | float | complex | Array) -> T:
     return _BACKEND_INSTANCE.idivide(x1, x2)
 
 
+def floor_divide(x1: int | float | Array, x2: int | float | Array) -> Array:
+    """Element-wise floor division."""
+    if _BACKEND_INSTANCE is None:
+        raise _error
+    return _BACKEND_INSTANCE.floor_divide(x1, x2)
+
+
+def remainder(x1: int | float | Array, x2: int | float | Array) -> Array:
+    """Element-wise remainder after floor division."""
+    if _BACKEND_INSTANCE is None:
+        raise _error
+    return _BACKEND_INSTANCE.remainder(x1, x2)
+
+
 def pow(x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:  # noqa: A001
     """Raise ``x`` to power ``p``."""
     if _BACKEND_INSTANCE is None:
@@ -101,6 +115,13 @@ def negative(x: Array) -> Array:
     if _BACKEND_INSTANCE is None:
         raise _error
     return _BACKEND_INSTANCE.negative(x)
+
+
+def positive(x: Array) -> Array:
+    """Return the array itself."""
+    if _BACKEND_INSTANCE is None:
+        raise _error
+    return x
 
 
 def absolute(x: Array) -> Array:

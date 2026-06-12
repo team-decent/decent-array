@@ -93,6 +93,13 @@ def transpose(x: Array, axis: tuple[int, ...] | None = None) -> Array:
     return _BACKEND_INSTANCE.transpose(x, axis)
 
 
+def matrix_transpose(x: Array) -> Array:
+    """Transpose the innermost two dimensions of ``x``."""
+    if _BACKEND_INSTANCE is None:
+        raise _error
+    return _BACKEND_INSTANCE.matrix_transpose(x)
+
+
 def shape(x: Array) -> tuple[int, ...]:
     """Return the shape of ``x``."""
     if _BACKEND_INSTANCE is None:

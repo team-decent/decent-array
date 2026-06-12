@@ -123,6 +123,12 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
         dims = axis if axis is not None else tuple(reversed(range(v.ndim)))
         return Array(torch.permute(v, dims=dims))
 
+    def matrix_transpose(self, x: Array) -> Array:
+        v = x.value
+        if v.ndim < 2:
+            raise ValueError(f"matrix_transpose requires an array with at least 2 dimensions, got {v.ndim}-D")
+        return Array(v.mT)
+
     def shape(self, x: Array) -> tuple[int, ...]:
         return tuple(x.value.shape)
 
@@ -163,6 +169,10 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
 
     def matmul(self, x1: Array, x2: Array) -> Array:
         return Array(x1.value @ x2.value)
+
+    def imatmul[T: Array](self, x1: T, x2: Array) -> T:
+        x1.value @= x2.value
+        return x1
 
     def vector_norm(
         self,
@@ -236,8 +246,26 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
         x1.value.div_(_unwrap(x2))
         return x1
 
+    def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        return Array(torch.floor_divide(_unwrap(x1), _unwrap(x2)))
+
+    def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
+        x1.value.floor_divide_(_unwrap(x2))
+        return x1
+
+    def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        return Array(torch.remainder(_unwrap(x1), _unwrap(x2)))
+
+    def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
+        x1.value.remainder_(_unwrap(x2))
+        return x1
+
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
         return Array(torch.pow(_unwrap(x1), _unwrap(x2)))
+
+    def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
+        x1.value.pow_(_unwrap(x2))
+        return x1
 
     def negative(self, x: Array) -> Array:
         return Array(torch.neg(x.value))
@@ -270,8 +298,43 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
 
     # Bitwise
 
-    def bitwise_and(self, x1: int | Array, x2: int | Array) -> Array:
+    def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
         return Array(torch.bitwise_and(_unwrap(x1), _unwrap(x2)))
+
+    def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
+        x1.value.bitwise_and_(_unwrap(x2))
+        return x1
+
+    def bitwise_invert(self, x: Array) -> Array:
+        return Array(torch.bitwise_not(x.value))
+
+    def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
+        return Array(torch.bitwise_or(_unwrap(x1), _unwrap(x2)))
+
+    def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
+        x1.value.bitwise_or_(_unwrap(x2))
+        return x1
+
+    def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
+        return Array(torch.bitwise_xor(_unwrap(x1), _unwrap(x2)))
+
+    def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
+        x1.value.bitwise_xor_(_unwrap(x2))
+        return x1
+
+    def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
+        return Array(torch.bitwise_left_shift(_unwrap(x1), _unwrap(x2)))
+
+    def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
+        x1.value.bitwise_left_shift_(_unwrap(x2))
+        return x1
+
+    def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
+        return Array(torch.bitwise_right_shift(_unwrap(x1), _unwrap(x2)))
+
+    def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
+        x1.value.bitwise_right_shift_(_unwrap(x2))
+        return x1
 
     # Operators
 

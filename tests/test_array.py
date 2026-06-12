@@ -104,6 +104,38 @@ def test_rtruediv_scalar(backend: tuple) -> None:
     np.testing.assert_allclose(_np(8 / a), [8.0, 4.0, 2.0])
 
 
+def test_floordiv_array(backend: tuple) -> None:
+    a = _create_array([9.0, 10.0, 11.0])
+    b = _create_array([2.0, 3.0, 5.0])
+    np.testing.assert_allclose(_np(a // b), [4.0, 3.0, 2.0])
+
+
+def test_floordiv_scalar(backend: tuple) -> None:
+    a = _create_array([9.0, 10.0, 11.0])
+    np.testing.assert_allclose(_np(a // 2), [4.0, 5.0, 5.0])
+
+
+def test_rfloordiv_scalar(backend: tuple) -> None:
+    a = _create_array([2.0, 3.0, 4.0])
+    np.testing.assert_allclose(_np(20 // a), [10.0, 6.0, 5.0])
+
+
+def test_mod_array(backend: tuple) -> None:
+    a = _create_array([9.0, 10.0, 11.0])
+    b = _create_array([2.0, 3.0, 5.0])
+    np.testing.assert_allclose(_np(a % b), [1.0, 1.0, 1.0])
+
+
+def test_mod_scalar(backend: tuple) -> None:
+    a = _create_array([9.0, 10.0, 11.0])
+    np.testing.assert_allclose(_np(a % 3), [0.0, 1.0, 2.0])
+
+
+def test_rmod_scalar(backend: tuple) -> None:
+    a = _create_array([2.0, 3.0, 4.0])
+    np.testing.assert_allclose(_np(20 % a), [0.0, 2.0, 0.0])
+
+
 def test_matmul_array(backend: tuple) -> None:
     a = _create_array([[1.0, 2.0], [3.0, 4.0]])
     b = _create_array([[5.0, 6.0], [7.0, 8.0]])
@@ -238,6 +270,59 @@ def test_rand_scalar(backend: tuple) -> None:
     # Python evaluates ``True & mask`` via ``mask.__rand__(True)`` since bool's
     # ``__and__`` doesn't accept Array.
     np.testing.assert_array_equal(_np(True & mask), [False, True, True])
+
+
+def test_or_array(backend: tuple) -> None:
+    a = _create_array([1.0, 2.0, 3.0])
+    mask1 = a > 1.0
+    mask2 = a < 2.0
+    np.testing.assert_array_equal(_np(mask1 | mask2), [True, True, True])
+
+
+def test_ror_scalar(backend: tuple) -> None:
+    a = _create_array([1.0, 2.0, 3.0])
+    mask = a > 1.0
+    np.testing.assert_array_equal(_np(True | mask), [True, True, True])
+
+
+def test_xor_array(backend: tuple) -> None:
+    a = _create_array([1.0, 2.0, 3.0])
+    mask1 = a > 1.0
+    mask2 = a > 2.0
+    np.testing.assert_array_equal(_np(mask1 ^ mask2), [False, True, False])
+
+
+def test_rxor_scalar(backend: tuple) -> None:
+    a = _create_array([1.0, 2.0, 3.0])
+    mask = a > 1.0
+    np.testing.assert_array_equal(_np(True ^ mask), [True, False, False])
+
+
+def test_lshift_array(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([1, 3, 7], dtype=np.int32))
+    b = iop.from_numpy(np.array([1, 2, 1], dtype=np.int32))
+    np.testing.assert_array_equal(_np(a << b), [2, 12, 14])
+
+
+def test_rlshift_scalar(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([1, 2, 3], dtype=np.int32))
+    np.testing.assert_array_equal(_np(2 << a), [4, 8, 16])
+
+
+def test_rshift_array(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([8, 12, 16], dtype=np.int32))
+    b = iop.from_numpy(np.array([1, 2, 3], dtype=np.int32))
+    np.testing.assert_array_equal(_np(a >> b), [4, 3, 2])
+
+
+def test_rrshift_scalar(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([1, 2, 3], dtype=np.int32))
+    np.testing.assert_array_equal(_np(64 >> a), [32, 16, 8])
+
+
+def test_invert_int_array(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([0, 1, 2], dtype=np.int32))
+    np.testing.assert_array_equal(_np(~a), np.bitwise_not(np.array([0, 1, 2], dtype=np.int32)))
 
 
 # In-place arithmetic -----------------------------------------------------
@@ -393,6 +478,31 @@ def test_transpose_property(backend: tuple) -> None:
 def test_T_alias(backend: tuple) -> None:
     a = _create_array([[1.0, 2.0], [3.0, 4.0]])
     np.testing.assert_allclose(_np(a.T), _np(a.transpose))
+
+
+def test_mT_property_2d(backend: tuple) -> None:
+    a = _create_array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    np.testing.assert_allclose(_np(a.mT), [[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]])
+
+
+def test_mT_property_3d_swaps_last_two_axes(backend: tuple) -> None:
+    a = iop.from_numpy(np.arange(24, dtype=np.float32).reshape(2, 3, 4))
+    out = _np(a.mT)
+    expected = np.swapaxes(np.arange(24, dtype=np.float32).reshape(2, 3, 4), -1, -2)
+    np.testing.assert_allclose(out, expected)
+
+
+def test_mT_differs_from_T_for_3d(backend: tuple) -> None:
+    a = iop.from_numpy(np.arange(24, dtype=np.float32).reshape(2, 3, 4))
+    assert _np(a.mT).shape == (2, 4, 3)
+    assert _np(a.T).shape == (4, 3, 2)
+
+
+def test_mT_raises_for_rank_lt_2(backend: tuple) -> None:
+    for raw in (np.array(1.0, dtype=np.float32), np.array([1.0, 2.0], dtype=np.float32)):
+        a = iop.from_numpy(raw)
+        with pytest.raises(ValueError, match=r"at least 2 dimensions"):
+            _ = a.mT
 
 
 def test_any_true(backend: tuple) -> None:

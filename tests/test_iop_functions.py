@@ -146,6 +146,24 @@ def test_transpose_explicit_dim(backend: tuple) -> None:
     assert iop.shape(out) == (3, 2, 4)
 
 
+def test_matrix_transpose_2d(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float32))
+    np.testing.assert_allclose(_np(iop.matrix_transpose(arr)), [[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]])
+
+
+def test_matrix_transpose_3d_swaps_last_two_axes(backend: tuple) -> None:
+    raw = np.arange(24, dtype=np.float32).reshape(2, 3, 4)
+    arr = iop.from_numpy(raw)
+    np.testing.assert_allclose(_np(iop.matrix_transpose(arr)), np.swapaxes(raw, -1, -2))
+
+
+def test_matrix_transpose_raises_for_rank_lt_2(backend: tuple) -> None:
+    for raw in (np.array(1.0, dtype=np.float32), np.array([1.0, 2.0], dtype=np.float32)):
+        arr = iop.from_numpy(raw)
+        with pytest.raises(ValueError, match=r"at least 2 dimensions"):
+            iop.matrix_transpose(arr)
+
+
 def test_shape_function(backend: tuple) -> None:
     arr = iop.from_numpy(np.zeros((2, 3, 4), dtype=np.float32))
     assert iop.shape(arr) == (2, 3, 4)
@@ -363,6 +381,18 @@ def test_div(backend: tuple) -> None:
     np.testing.assert_allclose(_np(iop.divide(a, b)), [4.0, 2.0])
 
 
+def test_floor_divide_function(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([9.0, 10.0], dtype=np.float32))
+    b = iop.from_numpy(np.array([2.0, 3.0], dtype=np.float32))
+    np.testing.assert_allclose(_np(iop.floor_divide(a, b)), [4.0, 3.0])
+
+
+def test_remainder_function(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([9.0, 10.0], dtype=np.float32))
+    b = iop.from_numpy(np.array([2.0, 3.0], dtype=np.float32))
+    np.testing.assert_allclose(_np(iop.remainder(a, b)), [1.0, 1.0])
+
+
 def test_iadd_func(backend: tuple) -> None:
     a = iop.from_numpy(np.array([1.0, 2.0], dtype=np.float32))
     out = iadd(a, 10.0)
@@ -397,6 +427,35 @@ def test_pow_function(backend: tuple) -> None:
     np.testing.assert_allclose(_np(iop.pow(arr, 2)), [4.0, 9.0, 16.0])
     arr2 = iop.from_numpy(np.array([1.0, 2.0, 3.0], dtype=np.float32))
     np.testing.assert_allclose(_np(iop.pow(arr, arr2)), [2.0, 9.0, 64.0])
+
+
+def test_backend_imatmul(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32))
+    b = iop.from_numpy(np.array([[5.0, 6.0], [7.0, 8.0]], dtype=np.float32))
+    out = a._backend.imatmul(a, b)
+    assert out is a
+    np.testing.assert_allclose(_np(a), [[19.0, 22.0], [43.0, 50.0]])
+
+
+def test_backend_ifloordiv(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([9.0, 10.0], dtype=np.float32))
+    out = a._backend.ifloordiv(a, 3.0)
+    assert out is a
+    np.testing.assert_allclose(_np(a), [3.0, 3.0])
+
+
+def test_backend_imod(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([9.0, 10.0], dtype=np.float32))
+    out = a._backend.imod(a, 3.0)
+    assert out is a
+    np.testing.assert_allclose(_np(a), [0.0, 1.0])
+
+
+def test_backend_ipow(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([2.0, 3.0, 4.0], dtype=np.float32))
+    out = a._backend.ipow(a, 2.0)
+    assert out is a
+    np.testing.assert_allclose(_np(a), [4.0, 9.0, 16.0])
 
 
 def test_negative(backend: tuple) -> None:
@@ -523,6 +582,70 @@ def test_bitwise_and_int_arrays(backend: tuple) -> None:
     a = iop.from_numpy(np.array([0b1100, 0b1010], dtype=np.int32))
     b = iop.from_numpy(np.array([0b1010, 0b0110], dtype=np.int32))
     np.testing.assert_array_equal(_np(iop.bitwise_and(a, b)), [0b1000, 0b0010])
+
+
+def test_bitwise_invert_int_array(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([0, 1, 2], dtype=np.int32))
+    np.testing.assert_array_equal(_np(iop.bitwise_invert(a)), np.bitwise_not(np.array([0, 1, 2], dtype=np.int32)))
+
+
+def test_bitwise_or_int_arrays(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([0b1100, 0b1010], dtype=np.int32))
+    b = iop.from_numpy(np.array([0b1010, 0b0110], dtype=np.int32))
+    np.testing.assert_array_equal(_np(iop.bitwise_or(a, b)), [0b1110, 0b1110])
+
+
+def test_bitwise_xor_int_arrays(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([0b1100, 0b1010], dtype=np.int32))
+    b = iop.from_numpy(np.array([0b1010, 0b0110], dtype=np.int32))
+    np.testing.assert_array_equal(_np(iop.bitwise_xor(a, b)), [0b0110, 0b1100])
+
+
+def test_bitwise_left_shift_int_arrays(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([1, 3], dtype=np.int32))
+    b = iop.from_numpy(np.array([1, 2], dtype=np.int32))
+    np.testing.assert_array_equal(_np(iop.bitwise_left_shift(a, b)), [2, 12])
+
+
+def test_bitwise_right_shift_int_arrays(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([8, 12], dtype=np.int32))
+    b = iop.from_numpy(np.array([1, 2], dtype=np.int32))
+    np.testing.assert_array_equal(_np(iop.bitwise_right_shift(a, b)), [4, 3])
+
+
+def test_backend_iand(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([0b1100, 0b1010], dtype=np.int32))
+    out = a._backend.iand(a, 0b0110)
+    assert out is a
+    np.testing.assert_array_equal(_np(a), [0b0100, 0b0010])
+
+
+def test_backend_ior(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([0b1100, 0b1010], dtype=np.int32))
+    out = a._backend.ior(a, 0b0011)
+    assert out is a
+    np.testing.assert_array_equal(_np(a), [0b1111, 0b1011])
+
+
+def test_backend_ixor(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([0b1100, 0b1010], dtype=np.int32))
+    out = a._backend.ixor(a, 0b0110)
+    assert out is a
+    np.testing.assert_array_equal(_np(a), [0b1010, 0b1100])
+
+
+def test_backend_ilshift(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([1, 3], dtype=np.int32))
+    out = a._backend.ilshift(a, 2)
+    assert out is a
+    np.testing.assert_array_equal(_np(a), [4, 12])
+
+
+def test_backend_irshift(backend: tuple) -> None:
+    a = iop.from_numpy(np.array([8, 12], dtype=np.int32))
+    out = a._backend.irshift(a, 2)
+    assert out is a
+    np.testing.assert_array_equal(_np(a), [2, 3])
 
 
 def test_argmax_default(backend: tuple) -> None:

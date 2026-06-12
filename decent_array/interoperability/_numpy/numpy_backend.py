@@ -312,5 +312,89 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     def choice(self, x: Array, size: int, replace: bool = True) -> Array:
         return Array(self._rng.choice(x.value, size=size, replace=replace))
 
+    # Dtypes
+
+    @property
+    def bool(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.bool_)
+
+    @property
+    def uint8(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.uint8)
+
+    @property
+    def uint16(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.uint16)
+
+    @property
+    def uint32(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.uint32)
+
+    @property
+    def uint64(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.uint64)
+
+    @property
+    def int8(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.int8)
+
+    @property
+    def int16(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.int16)
+
+    @property
+    def int32(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.int32)
+
+    @property
+    def int64(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.int64)
+
+    @property
+    def float16(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.float16)
+
+    @property
+    def float32(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.float32)
+
+    @property
+    def float64(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.float64)
+
+    @property
+    def complex64(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.complex64)
+
+    @property
+    def complex128(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.complex128)
+
+    @property
+    def float128(self) -> Any | None:  # noqa: ANN401
+        float128 = getattr(np, "float128", None)
+        return np.dtype(float128) if float128 is not None else None
+
+    @property
+    def complex256(self) -> Any | None:  # noqa: ANN401
+        complex256 = getattr(np, "complex256", None)
+        return np.dtype(complex256) if complex256 is not None else None
+
+    @property
+    def unicode(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.str_)
+
+    @property
+    def bytes(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.bytes_)
+
+    @property
+    def object(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.object_)
+
+    @property
+    def void(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.void)
+
 
 register_backend(SupportedFrameworks.NUMPY, NumpyBackend)

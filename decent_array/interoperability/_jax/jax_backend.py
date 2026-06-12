@@ -10,7 +10,7 @@ rather than mutating it.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from time import time_ns
 from typing import Any, cast
 
@@ -317,6 +317,83 @@ class JaxBackend(Backend):  # noqa: PLR0904
         """Split the stored key, advance state, return a sub-key for one draw."""
         self._key, sub = jax.random.split(self._key)
         return cast("jax.Array", sub)
+
+    # Dtypes
+
+    @property
+    def bool(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.bool_)
+
+    @property
+    def uint8(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.uint8)
+
+    @property
+    def uint16(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.uint16)
+
+    @property
+    def uint32(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.uint32)
+
+    @property
+    def uint64(self) -> Any:  # noqa: ANN401
+        if _x64_enabled():
+            return np.dtype(jnp.uint64)
+        return None
+
+    @property
+    def int8(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.int8)
+
+    @property
+    def int16(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.int16)
+
+    @property
+    def int32(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.int32)
+
+    @property
+    def int64(self) -> Any:  # noqa: ANN401
+        if _x64_enabled():
+            return np.dtype(jnp.int64)
+        return None
+
+    @property
+    def float16(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.float16)
+
+    @property
+    def float32(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.float32)
+
+    @property
+    def float64(self) -> Any:  # noqa: ANN401
+        if _x64_enabled():
+            return np.dtype(jnp.float64)
+        return None
+
+    @property
+    def complex64(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.complex64)
+
+    @property
+    def complex128(self) -> Any:  # noqa: ANN401
+        if _x64_enabled():
+            return np.dtype(jnp.complex128)
+        return None
+
+    @property
+    def bfloat16(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.bfloat16)
+
+
+_JAX_CONFIG_READ = cast("Callable[[str], Any]", jax.config.read)
+
+
+def _x64_enabled() -> bool:
+    return bool(_JAX_CONFIG_READ("jax_enable_x64"))
 
 
 register_backend(SupportedFrameworks.JAX, JaxBackend)

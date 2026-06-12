@@ -359,5 +359,67 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
         indices = weights.multinomial(num_samples=size, replacement=replace, generator=self._generator)
         return Array(v[indices])
 
+    # Dtypes
+
+    @property
+    def bool(self) -> torch.dtype:
+        return torch.bool
+
+    @property
+    def uint8(self) -> torch.dtype:
+        return torch.uint8
+
+    @property
+    def int8(self) -> torch.dtype:
+        return torch.int8
+
+    @property
+    def int16(self) -> torch.dtype:
+        return torch.int16
+
+    @property
+    def int32(self) -> torch.dtype:
+        return torch.int32
+
+    @property
+    def int64(self) -> torch.dtype:
+        return torch.int64
+
+    @property
+    def float16(self) -> torch.dtype:
+        return torch.float16
+
+    @property
+    def float32(self) -> torch.dtype:
+        return torch.float32
+
+    @property
+    def float64(self) -> torch.dtype:
+        return torch.float64
+
+    @property
+    def complex64(self) -> torch.dtype:
+        return torch.complex64
+
+    @property
+    def complex128(self) -> torch.dtype:
+        return torch.complex128
+
+    @property
+    def qint8(self) -> Any:  # noqa: ANN401
+        return torch.qint8
+
+    @property
+    def qint32(self) -> Any:  # noqa: ANN401
+        return torch.qint32
+
+    @property
+    def quint8(self) -> Any:  # noqa: ANN401
+        return torch.quint8
+
+    @property
+    def bfloat16(self) -> torch.dtype:
+        return torch.bfloat16
+
 
 register_backend(SupportedFrameworks.PYTORCH, PyTorchBackend)

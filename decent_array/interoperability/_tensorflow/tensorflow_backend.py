@@ -366,5 +366,87 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
             indices = tf.cast(tf.math.top_k(scores, k=size).indices, tf.int32)
         return Array(tf.gather(v, indices))
 
+    # Dtypes
+
+    @property
+    def bool(self) -> tf.dtypes.DType:
+        return tf.bool
+
+    @property
+    def uint8(self) -> tf.dtypes.DType:
+        return tf.uint8
+
+    @property
+    def uint16(self) -> tf.dtypes.DType:
+        return tf.uint16
+
+    @property
+    def uint32(self) -> tf.dtypes.DType:
+        return tf.uint32
+
+    @property
+    def uint64(self) -> tf.dtypes.DType:
+        return tf.uint64
+
+    @property
+    def int8(self) -> tf.dtypes.DType:
+        return tf.int8
+
+    @property
+    def int16(self) -> tf.dtypes.DType:
+        return tf.int16
+
+    @property
+    def int32(self) -> tf.dtypes.DType:
+        return tf.int32
+
+    @property
+    def int64(self) -> tf.dtypes.DType:
+        return tf.int64
+
+    @property
+    def float16(self) -> tf.dtypes.DType:
+        return tf.float16
+
+    @property
+    def float32(self) -> tf.dtypes.DType:
+        return tf.float32
+
+    @property
+    def float64(self) -> tf.dtypes.DType:
+        return tf.float64
+
+    @property
+    def complex64(self) -> tf.dtypes.DType:
+        return tf.complex64
+
+    @property
+    def complex128(self) -> tf.dtypes.DType:
+        return tf.complex128
+
+    @property
+    def qint8(self) -> tf.dtypes.DType:
+        return tf.qint8
+
+    @property
+    def qint16(self) -> tf.dtypes.DType:
+        return tf.qint16
+
+    @property
+    def qint32(self) -> tf.dtypes.DType:
+        return tf.qint32
+
+    @property
+    def quint8(self) -> tf.dtypes.DType:
+        return tf.quint8
+
+    @property
+    def quint16(self) -> tf.dtypes.DType:
+        return tf.quint16
+
+    @property
+    def bfloat16(self) -> tf.dtypes.DType:
+        return tf.bfloat16
+
 
 register_backend(SupportedFrameworks.TENSORFLOW, TensorflowBackend)

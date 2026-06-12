@@ -325,3 +325,135 @@ class Backend(ABC):  # noqa: PLR0904
     @abstractmethod
     def choice(self, x: Array, size: int, replace: bool = True) -> Array:
         """Sample ``size`` elements from ``x``."""
+
+    # DTYPES --------------------------------------------------------------
+
+    @property
+    @abstractmethod
+    def bool(self) -> Any:  # noqa: ANN401
+        """Bool dtype."""
+
+    @property
+    @abstractmethod
+    def uint8(self) -> Any:  # noqa: ANN401
+        """Unsigned 8-bit integer dtype."""
+
+    @property
+    def uint16(self) -> Any | None:  # noqa: ANN401
+        """Unsigned 16-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def uint32(self) -> Any | None:  # noqa: ANN401
+        """Unsigned 32-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def uint64(self) -> Any | None:  # noqa: ANN401
+        """Unsigned 64-bit integer dtype (optional)."""
+        return None
+
+    @property
+    @abstractmethod
+    def int8(self) -> Any:  # noqa: ANN401
+        """Signed 8-bit integer dtype."""
+
+    @property
+    @abstractmethod
+    def int16(self) -> Any:  # noqa: ANN401
+        """Signed 16-bit integer dtype."""
+
+    @property
+    @abstractmethod
+    def int32(self) -> Any:  # noqa: ANN401
+        """Signed 32-bit integer dtype."""
+
+    @property
+    @abstractmethod
+    def int64(self) -> Any:  # noqa: ANN401
+        """Signed 64-bit integer dtype."""
+
+    @property
+    @abstractmethod
+    def float16(self) -> Any:  # noqa: ANN401
+        """16-bit floating-point dtype."""
+
+    @property
+    @abstractmethod
+    def float32(self) -> Any:  # noqa: ANN401
+        """32-bit floating-point dtype."""
+
+    @property
+    @abstractmethod
+    def float64(self) -> Any:  # noqa: ANN401
+        """64-bit floating-point dtype."""
+
+    @property
+    @abstractmethod
+    def complex64(self) -> Any:  # noqa: ANN401
+        """64-bit complex dtype."""
+
+    @property
+    @abstractmethod
+    def complex128(self) -> Any:  # noqa: ANN401
+        """128-bit complex dtype."""
+
+    @property
+    def float128(self) -> Any | None:  # noqa: ANN401
+        """128-bit floating-point dtype (optional)."""
+        return None
+
+    @property
+    def complex256(self) -> Any | None:  # noqa: ANN401
+        """256-bit complex dtype (optional)."""
+        return None
+
+    @property
+    def qint8(self) -> Any | None:  # noqa: ANN401
+        """Quantized 8-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def qint16(self) -> Any | None:  # noqa: ANN401
+        """Quantized 16-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def qint32(self) -> Any | None:  # noqa: ANN401
+        """Quantized 32-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def quint8(self) -> Any | None:  # noqa: ANN401
+        """Quantized unsigned 8-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def quint16(self) -> Any | None:  # noqa: ANN401
+        """Quantized unsigned 16-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def bfloat16(self) -> Any | None:  # noqa: ANN401
+        """Brain floating point 16-bit dtype (optional)."""
+        return None
+
+    @property
+    def unicode(self) -> Any | None:  # noqa: ANN401
+        """Unicode string dtype (optional)."""
+        return None
+
+    @property
+    def bytes(self) -> Any | None:  # noqa: ANN401
+        """Byte string dtype (optional)."""
+        return None
+
+    @property
+    def object(self) -> Any | None:  # noqa: ANN401
+        """Python object dtype (optional)."""
+        return None
+
+    @property
+    def void(self) -> Any | None:  # noqa: ANN401
+        """Raw/void dtype (optional)."""
+        return None

@@ -202,7 +202,7 @@ _OPTIONAL_DTYPES = [
 # bfloat16                   | ✗*    | ✓         | ✓          | ✓          | * available with ml_dtypes dependency
 
 # unicode_                   | ✓     | ✗         | ✗          | ✗          | np.str_
-# bytes_                     | ✓     | ✗         | ✗          | ✗          | np.bytes_, tf.string
+# bytes_                     | ✓     | ✗         | ✗          | ✓          | np.bytes_, tf.string
 # object                     | ✓     | ✗         | ✗          | ✗          |
 # void                       | ✓     | ✗         | ✗          | ✗          |
 

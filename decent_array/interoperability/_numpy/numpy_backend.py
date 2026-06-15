@@ -378,7 +378,7 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     # Dtypes
 
     @property
-    def bool(self) -> Any:  # noqa: ANN401
+    def bool_(self) -> Any:  # noqa: ANN401
         return np.dtype(np.bool_)
 
     @property
@@ -444,15 +444,15 @@ class NumpyBackend(Backend):  # noqa: PLR0904
         return np.dtype(complex256) if complex256 is not None else None
 
     @property
-    def unicode(self) -> Any:  # noqa: ANN401
+    def unicode_(self) -> Any:  # noqa: ANN401
         return np.dtype(np.str_)
 
     @property
-    def bytes(self) -> Any:  # noqa: ANN401
+    def bytes_(self) -> Any:  # noqa: ANN401
         return np.dtype(np.bytes_)
 
     @property
-    def object(self) -> Any:  # noqa: ANN401
+    def object_(self) -> Any:  # noqa: ANN401
         return np.dtype(np.object_)
 
     @property

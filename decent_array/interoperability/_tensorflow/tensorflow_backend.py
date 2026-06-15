@@ -437,7 +437,7 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     # Dtypes
 
     @property
-    def bool(self) -> tf.dtypes.DType:
+    def bool_(self) -> tf.dtypes.DType:
         return tf.bool
 
     @property

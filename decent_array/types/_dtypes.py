@@ -2,43 +2,50 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
-from decent_array.interoperability._backend_manager import register_backend_listener
-
-if TYPE_CHECKING:
-    from decent_array.interoperability._abstracts import Backend
+from typing import Any
 
 
-_BACKEND_INSTANCE: Backend | None = None
-_error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
-
-
-def _update_backend(backend: Backend | None) -> None:
-    global _BACKEND_INSTANCE  # noqa: PLW0603
-    _BACKEND_INSTANCE = backend
-
-
-register_backend_listener(_update_backend)
+_SUPPORTED = {
+    "bfloat16",
+    "bool_",
+    "bytes_",
+    "complex64",
+    "complex128",
+    "complex256",
+    "float16",
+    "float32",
+    "float64",
+    "float128",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "object_",
+    "qint8",
+    "qint16",
+    "qint32",
+    "quint8",
+    "quint16",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "unicode_",
+    "void",
+}
 
 
 class dtype:  # noqa: N801
     """Base class for dtypes."""
 
     def __init__(self, name: str):
-        if _BACKEND_INSTANCE is None:
-            raise _error
-
         # name doesn't map to any dtype
-        if name not in _ALL_DTYPES:
-            raise ValueError(f"dtype {name} is not supported.")
-
-        # this is None if the dtype is not supported
-        backend_dtype = getattr(_BACKEND_INSTANCE, name, None)
+        if name not in _SUPPORTED:
+            raise ValueError(f"dtype {name} is not supported. Supported dtypes: {', '.join(_SUPPORTED)}")
 
         self._name = name
-        self._backend_dtype: Any = backend_dtype
-        self._available = backend_dtype is not None
+        self._backend_dtype: Any = None
+        self._available = False
 
     @property
     def name(self) -> str:
@@ -49,6 +56,11 @@ class dtype:  # noqa: N801
     def available(self) -> bool:
         """Availability of the dtype (dependent on backend, device, backend settings, OS)."""
         return self._available
+
+    @property
+    def backend_dtype(self) -> Any:  # noqa: ANN401
+        """The corresponding backend dtype object."""
+        return self._backend_dtype
 
     def __str__(self) -> str:
         """Name of the dtype."""
@@ -65,14 +77,8 @@ class dtype:  # noqa: N801
         return hash(self.name)
 
 
-# TODO create global error message for this when an unavailable dtype is attampted in astype and other funcs
-# raise ValueError(f"dtype {name} is not supported.")  # TODO add device and backend name to contextualize
-
-# TODO do we want to have an optional dependence on ml_dtypes to support bfloat16 for numpy?
-
-
 _BOOL_DTYPES = {
-    "bool_": dtype("bool"),
+    "bool_": dtype("bool_"),
 }
 
 _SIGNED_INT_DTYPES = {
@@ -115,9 +121,9 @@ _QUANTIZED_UNSIGNED_INT_DTYPES = {
 }
 
 _MISCELLANEOUS_DTYPES = {
-    "unicode_": dtype("unicode"),
-    "bytes_": dtype("bytes"),
-    "object": dtype("object"),
+    "unicode_": dtype("unicode_"),
+    "bytes_": dtype("bytes_"),
+    "object_": dtype("object_"),
     "void": dtype("void"),
 }
 
@@ -128,6 +134,7 @@ _INTEGRAL_DTYPES = (_SIGNED_INT_DTYPES |
                     )
 _NUMERIC_DTYPES = _INTEGRAL_DTYPES | _REAL_FLOATING_DTYPES | _COMPLEX_FLOATING_DTYPES
 _ALL_DTYPES = _BOOL_DTYPES | _NUMERIC_DTYPES | _MISCELLANEOUS_DTYPES
+
 
 
 _BACKEND_DTYPE_TO_DTYPE: dict[Any, dtype] = {}

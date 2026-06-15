@@ -425,7 +425,7 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
     # Dtypes
 
     @property
-    def bool(self) -> torch.dtype:
+    def bool_(self) -> torch.dtype:
         return torch.bool
 
     @property

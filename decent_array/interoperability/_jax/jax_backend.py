@@ -384,7 +384,7 @@ class JaxBackend(Backend):  # noqa: PLR0904
     # Dtypes
 
     @property
-    def bool(self) -> Any:  # noqa: ANN401
+    def bool_(self) -> Any:  # noqa: ANN401
         return np.dtype(jnp.bool_)
 
     @property

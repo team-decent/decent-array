@@ -398,7 +398,7 @@ class Backend(ABC):  # noqa: PLR0904
 
     @property
     @abstractmethod
-    def bool(self) -> Any:  # noqa: ANN401
+    def bool_(self) -> Any:  # noqa: ANN401
         """Bool dtype."""
 
     @property
@@ -437,9 +437,9 @@ class Backend(ABC):  # noqa: PLR0904
         """Signed 32-bit integer dtype."""
 
     @property
-    @abstractmethod
     def int64(self) -> Any:  # noqa: ANN401
         """Signed 64-bit integer dtype."""
+        return None
 
     @property
     @abstractmethod
@@ -452,19 +452,19 @@ class Backend(ABC):  # noqa: PLR0904
         """32-bit floating-point dtype."""
 
     @property
-    @abstractmethod
     def float64(self) -> Any:  # noqa: ANN401
         """64-bit floating-point dtype."""
+        return None
 
     @property
-    @abstractmethod
     def complex64(self) -> Any:  # noqa: ANN401
         """64-bit complex dtype."""
+        return None
 
     @property
-    @abstractmethod
     def complex128(self) -> Any:  # noqa: ANN401
         """128-bit complex dtype."""
+        return None
 
     @property
     def float128(self) -> Any | None:  # noqa: ANN401
@@ -507,17 +507,17 @@ class Backend(ABC):  # noqa: PLR0904
         return None
 
     @property
-    def unicode(self) -> Any | None:  # noqa: ANN401
+    def unicode_(self) -> Any | None:  # noqa: ANN401
         """Unicode string dtype (optional)."""
         return None
 
     @property
-    def bytes(self) -> Any | None:  # noqa: ANN401
+    def bytes_(self) -> Any | None:  # noqa: ANN401
         """Byte string dtype (optional)."""
         return None
 
     @property
-    def object(self) -> Any | None:  # noqa: ANN401
+    def object_(self) -> Any | None:  # noqa: ANN401
         """Python object dtype (optional)."""
         return None
 

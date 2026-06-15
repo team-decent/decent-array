@@ -17,7 +17,7 @@ from decent_array.interoperability._backend_manager import (
     reset_backends,
     set_backend,
 )
-from decent_array.types import SupportedDevices, SupportedFrameworks
+from decent_array.types import Devices, Frameworks
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -40,11 +40,11 @@ def _isolate_listeners_and_backends() -> Iterator[None]:
 
 
 def test_normalize_accepts_enum() -> None:
-    assert _normalize(SupportedFrameworks.NUMPY) == SupportedFrameworks.NUMPY
+    assert _normalize(Frameworks.NUMPY) == Frameworks.NUMPY
 
 
 def test_normalize_accepts_string() -> None:
-    assert _normalize("numpy") == SupportedFrameworks.NUMPY
+    assert _normalize("numpy") == Frameworks.NUMPY
 
 
 def test_normalize_unknown_raises() -> None:
@@ -57,19 +57,19 @@ def test_normalize_unknown_raises() -> None:
 
 def test_set_backend_with_string() -> None:
     set_backend("numpy")
-    assert backend_manager._ACTIVE_BACKEND.get() == SupportedFrameworks.NUMPY
+    assert backend_manager._ACTIVE_BACKEND.get() == Frameworks.NUMPY
 
 
 def test_set_backend_with_enum() -> None:
-    set_backend(SupportedFrameworks.NUMPY)
-    assert backend_manager._ACTIVE_BACKEND.get() == SupportedFrameworks.NUMPY
+    set_backend(Frameworks.NUMPY)
+    assert backend_manager._ACTIVE_BACKEND.get() == Frameworks.NUMPY
 
 
 def test_set_backend_idempotent_same_backend() -> None:
     set_backend("numpy")
     # Re-activating with the same backend+device must be a no-op (no exception).
     set_backend("numpy")
-    assert backend_manager._ACTIVE_BACKEND.get() == SupportedFrameworks.NUMPY
+    assert backend_manager._ACTIVE_BACKEND.get() == Frameworks.NUMPY
 
 
 def test_set_backend_different_backend_raises() -> None:
@@ -80,8 +80,8 @@ def test_set_backend_different_backend_raises() -> None:
 
 def test_set_backend_with_string_device() -> None:
     set_backend("numpy", "cpu")
-    instance = _instantiate(SupportedFrameworks.NUMPY, SupportedDevices.CPU)
-    assert instance.device == SupportedDevices.CPU
+    instance = _instantiate(Frameworks.NUMPY, Devices.CPU)
+    assert instance.device == Devices.CPU
 
 
 def test_set_backend_invalid_name_raises() -> None:
@@ -97,21 +97,21 @@ def test_register_backend_rejects_non_subclass() -> None:
         pass
 
     with pytest.raises(TypeError, match=r"subclass of Backend"):
-        register_backend(SupportedFrameworks.NUMPY, NotABackend)  # type: ignore[arg-type]
+        register_backend(Frameworks.NUMPY, NotABackend)  # type: ignore[arg-type]
 
 
 def test_register_backend_replaces_cached_instance() -> None:
     # First import registers the real backend; instantiate to populate cache.
     set_backend("numpy")
-    cached = backend_manager._BACKEND_INSTANCES.get(SupportedFrameworks.NUMPY)
+    cached = backend_manager._BACKEND_INSTANCES.get(Frameworks.NUMPY)
     assert cached is not None
 
     # Re-register the same class — cache should be cleared so next instantiate is fresh.
     from decent_array.interoperability._numpy.numpy_backend import NumpyBackend  # noqa: PLC0415
 
     reset_backends()
-    register_backend(SupportedFrameworks.NUMPY, NumpyBackend)
-    assert SupportedFrameworks.NUMPY not in backend_manager._BACKEND_INSTANCES
+    register_backend(Frameworks.NUMPY, NumpyBackend)
+    assert Frameworks.NUMPY not in backend_manager._BACKEND_INSTANCES
 
 
 # register_backend_listener ---------------------------------------------
@@ -167,22 +167,22 @@ def test_reset_backends_clears_active() -> None:
 
 def test_reset_backends_clears_instance_cache() -> None:
     set_backend("numpy")
-    assert SupportedFrameworks.NUMPY in backend_manager._BACKEND_INSTANCES
+    assert Frameworks.NUMPY in backend_manager._BACKEND_INSTANCES
     reset_backends()
-    assert SupportedFrameworks.NUMPY not in backend_manager._BACKEND_INSTANCES
+    assert Frameworks.NUMPY not in backend_manager._BACKEND_INSTANCES
 
 
 # _instantiate ----------------------------------------------------------
 
 
 def test_instantiate_caches_instance() -> None:
-    a = _instantiate(SupportedFrameworks.NUMPY, SupportedDevices.CPU)
-    b = _instantiate(SupportedFrameworks.NUMPY, SupportedDevices.CPU)
+    a = _instantiate(Frameworks.NUMPY, Devices.CPU)
+    b = _instantiate(Frameworks.NUMPY, Devices.CPU)
     assert a is b
 
 
 def test_set_backend_device_mismatch_raises() -> None:
-    set_backend("numpy", SupportedDevices.CPU)
+    set_backend("numpy", Devices.CPU)
     # NumPy backend rejects non-CPU devices at construction; check behavior via the
     # configured-mismatch path: re-set with a different device after first activation.
     with pytest.raises((RuntimeError, ValueError)):
@@ -194,8 +194,8 @@ def test_set_backend_device_mismatch_raises() -> None:
 
 
 def test_default_device_returns_active_device() -> None:
-    set_backend("numpy", SupportedDevices.CPU)
-    assert default_device() == SupportedDevices.CPU
+    set_backend("numpy", Devices.CPU)
+    assert default_device() == Devices.CPU
 
 
 def test_default_device_raises_when_no_backend() -> None:

@@ -11,21 +11,21 @@ from decent_array.types._types import (
     DTypes as DTypes,
 )
 from decent_array.types._types import (
-    SupportedArrayTypes as SupportedArrayTypes,
+    ArrayTypes as ArrayTypes,
 )
 from decent_array.types._types import (
-    SupportedDevices as SupportedDevices,
+    Devices as Devices,
 )
 from decent_array.types._types import (
-    SupportedFrameworks as SupportedFrameworks,
+    Frameworks as Frameworks,
 )
 
 _static_exports = [  # noqa: RUF067
     "ArrayLike",
-    "SupportedArrayTypes",
+    "ArrayTypes",
     "ArrayKey",
-    "SupportedFrameworks",
-    "SupportedDevices",
+    "Frameworks",
+    "Devices",
     "DTypes",
     "dtype",
     "dtypes",
@@ -40,9 +40,9 @@ __all__ = [
     "ArrayKey",
     "ArrayLike",
     "DTypes",
-    "SupportedArrayTypes",
-    "SupportedDevices",
-    "SupportedFrameworks",
+    "ArrayTypes",
+    "Devices",
+    "Frameworks",
     "dtype",
     "dtypes",
 ]

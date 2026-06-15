@@ -20,7 +20,7 @@ from decent_array.interoperability._backend_manager import register_backend_list
 if TYPE_CHECKING:
     from decent_array import Array
     from decent_array.interoperability._abstracts import Backend
-    from decent_array.types import ArrayKey, SupportedDevices
+    from decent_array.types import ArrayKey, Devices
 
 _BACKEND_INSTANCE: Backend | None = None
 _error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
@@ -34,15 +34,15 @@ def _update_backend(backend: Backend | None) -> None:
 register_backend_listener(_update_backend)
 
 
-def device_to_native(device: SupportedDevices) -> Any:  # noqa: ANN401
-    """Convert :class:`~decent_array.types.SupportedDevices` to the active backend's native device."""
+def device_to_native(device: Devices) -> Any:  # noqa: ANN401
+    """Convert :class:`~decent_array.types.Devices` to the active backend's native device."""
     if _BACKEND_INSTANCE is None:
         raise _error
     return _BACKEND_INSTANCE.device_to_native(device)
 
 
-def device_of(x: Array) -> SupportedDevices:
-    """Return the :class:`~decent_array.types.SupportedDevices` of ``x``."""
+def device_of(x: Array) -> Devices:
+    """Return the :class:`~decent_array.types.Devices` of ``x``."""
     if _BACKEND_INSTANCE is None:
         raise _error
     return _BACKEND_INSTANCE.device_of(x)

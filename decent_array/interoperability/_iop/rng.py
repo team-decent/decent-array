@@ -21,7 +21,7 @@ import random
 from typing import TYPE_CHECKING, Any, cast
 
 from decent_array.interoperability._backend_manager import _instantiate, register_backend_listener
-from decent_array.types import SupportedDevices, SupportedFrameworks
+from decent_array.types import Devices, Frameworks
 
 if TYPE_CHECKING:
     import numpy
@@ -118,7 +118,7 @@ class _RngCoordinator:
         active.set_rng_state(state)
 
     def numpy_backend(self) -> NumpyBackend:
-        return cast("NumpyBackend", _instantiate(SupportedFrameworks.NUMPY, SupportedDevices.CPU))
+        return cast("NumpyBackend", _instantiate(Frameworks.NUMPY, Devices.CPU))
 
 
 _COORDINATOR = _RngCoordinator()

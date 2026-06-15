@@ -35,7 +35,7 @@ Type alias for array-like types supported in decent-array, including NumPy array
 PyTorch tensors, TensorFlow tensors, and JAX arrays.
 """
 
-SupportedArrayTypes: TypeAlias = bool | int | float | complex | ArrayLike  # noqa: UP040
+ArrayTypes: TypeAlias = bool | int | float | complex | ArrayLike  # noqa: UP040
 """
 Type alias for supported types for optimization variables in decent-array,
 including array-like types and scalars.
@@ -52,7 +52,7 @@ Includes single indices, tuples of indices, slices, and tuples of slices.
 
 # Its important that the enum values correspond to the folder names of the backends,
 # since those are used for dynamic imports in _backend_manager.py
-class SupportedFrameworks(Enum):
+class Frameworks(Enum):
     """Enum for supported frameworks in decent-array."""
 
     NUMPY = "numpy"
@@ -61,7 +61,7 @@ class SupportedFrameworks(Enum):
     JAX = "jax"
 
 
-class SupportedDevices(Enum):
+class Devices(Enum):
     """Enum for supported devices in decent-array."""
 
     CPU = "cpu"

@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from decent_array.interoperability._abstracts import Backend
-    from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices
+    from decent_array.types import ArrayKey, DTypes, ArrayTypes, Devices
 
 
 _BACKEND_INSTANCE: Backend | None = None
@@ -60,7 +60,7 @@ class Array:  # noqa: PLR0904
 
     __slots__ = ("_backend", "value")
 
-    def __init__(self, value: SupportedArrayTypes) -> None:
+    def __init__(self, value: ArrayTypes) -> None:
         """
         Wrap ``value`` in an :class:`Array`.
 
@@ -445,7 +445,7 @@ class Array:  # noqa: PLR0904
         return self._backend.all(self)
 
     @property
-    def device(self) -> SupportedDevices:
+    def device(self) -> Devices:
         """Return the device of the array."""
         return self._backend.device_of(self)
 

@@ -18,25 +18,25 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
-from decent_array.types import SupportedDevices
+from decent_array.types import Devices
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from decent_array import Array
-    from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes
+    from decent_array.types import ArrayKey, DTypes, ArrayTypes
 
 
 class Backend(ABC):  # noqa: PLR0904
     """
     Abstract base class for a backend.
 
-    Concrete backends are bound to a single :class:`SupportedDevices` at construction
+    Concrete backends are bound to a single :class:`Devices` at construction
     time; that device is the default for all new arrays produced by this backend.
     """
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
-        self.device: SupportedDevices = device
+    def __init__(self, device: Devices = Devices.CPU) -> None:
+        self.device: Devices = device
 
     # Array creation ------------------------------------------------------
 
@@ -61,12 +61,12 @@ class Backend(ABC):  # noqa: PLR0904
         """Create an ``n x n`` identity matrix."""
 
     @abstractmethod
-    def device_to_native(self, device: SupportedDevices) -> Any:  # noqa: ANN401
-        """Convert :class:`SupportedDevices` to the backend's native device representation."""
+    def device_to_native(self, device: Devices) -> Any:  # noqa: ANN401
+        """Convert :class:`Devices` to the backend's native device representation."""
 
     @abstractmethod
-    def device_of(self, x: Array) -> SupportedDevices:
-        """Return the :class:`SupportedDevices` of the given array."""
+    def device_of(self, x: Array) -> Devices:
+        """Return the :class:`Devices` of the given array."""
 
     # Array manipulation --------------------------------------------------
 
@@ -75,7 +75,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Return a copy of ``x``."""
 
     @abstractmethod
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         """Convert ``x`` to a NumPy array on the CPU."""
 
     @abstractmethod

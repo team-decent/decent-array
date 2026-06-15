@@ -20,7 +20,7 @@ from numpy.typing import NDArray
 from decent_array import Array
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, SupportedFrameworks
+from decent_array.types import ArrayKey, DTypes, ArrayTypes, Devices, Frameworks
 
 
 def _unwrap(x: Any) -> Any:  # noqa: ANN401
@@ -49,7 +49,7 @@ _DTYPE_MAP = {
 class TensorflowBackend(Backend):  # noqa: PLR0904
     """TensorFlow implementation of :class:`Backend`."""
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
+    def __init__(self, device: Devices = Devices.CPU) -> None:
         super().__init__(device)
         self._native_device: str = self.device_to_native(device)
         self._generator: tf.random.Generator = tf.random.Generator.from_non_deterministic_state(alg="philox")
@@ -74,23 +74,23 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
         with tf.device(self._native_device):
             return Array(tf.eye(n))
 
-    def device_to_native(self, device: SupportedDevices) -> str:
-        if device in {SupportedDevices.CPU, SupportedDevices.GPU}:
+    def device_to_native(self, device: Devices) -> str:
+        if device in {Devices.CPU, Devices.GPU}:
             return f"/{device.value}:0"
         raise ValueError(f"Unsupported device for TensorFlow: {device}")
 
-    def device_of(self, x: Array) -> SupportedDevices:
+    def device_of(self, x: Array) -> Devices:
         device_str = x.value.device.lower()
         if "gpu" in device_str or "cuda" in device_str:
-            return SupportedDevices.GPU
-        return SupportedDevices.CPU
+            return Devices.GPU
+        return Devices.CPU
 
     # Array manipulation
 
     def copy(self, x: Array) -> Array:
         return Array(tf.identity(x.value))
 
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         """Return the value of an :class:`Array` as a NumPy array."""
         v = x.value if type(x) is Array else x
         if isinstance(v, tf.Tensor):
@@ -517,4 +517,4 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
         return tf.bfloat16
 
 
-register_backend(SupportedFrameworks.TENSORFLOW, TensorflowBackend)
+register_backend(Frameworks.TENSORFLOW, TensorflowBackend)

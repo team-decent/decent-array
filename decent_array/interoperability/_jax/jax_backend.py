@@ -22,7 +22,7 @@ from numpy.typing import NDArray
 from decent_array import Array
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, SupportedFrameworks
+from decent_array.types import ArrayKey, DTypes, ArrayTypes, Devices, Frameworks
 
 
 def _unwrap(x: Any) -> Any:  # noqa: ANN401
@@ -50,7 +50,7 @@ _DTYPE_MAP = {
 class JaxBackend(Backend):  # noqa: PLR0904
     """JAX implementation of :class:`Backend`."""
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
+    def __init__(self, device: Devices = Devices.CPU) -> None:
         super().__init__(device)
         self._native_device: jax.Device = self.device_to_native(device)
         self._key: jax.Array = jax.random.key(time_ns())
@@ -72,19 +72,19 @@ class JaxBackend(Backend):  # noqa: PLR0904
     def eye(self, n: int) -> Array:
         return Array(jnp.eye(n, device=self._native_device))
 
-    def device_to_native(self, device: SupportedDevices) -> jax.Device:
-        if device == SupportedDevices.CPU:
+    def device_to_native(self, device: Devices) -> jax.Device:
+        if device == Devices.CPU:
             return jax.devices("cpu")[0]
-        if device == SupportedDevices.GPU:
+        if device == Devices.GPU:
             return jax.devices("gpu")[0]
         raise ValueError(f"Unsupported device for JAX: {device}")
 
-    def device_of(self, x: Array) -> SupportedDevices:
+    def device_of(self, x: Array) -> Devices:
         platform = x.value.device.platform
         if platform == "gpu":
-            return SupportedDevices.GPU
+            return Devices.GPU
         if platform == "cpu":
-            return SupportedDevices.CPU
+            return Devices.CPU
         raise TypeError(f"Unsupported JAX platform: {platform}")
 
     # Array manipulation
@@ -92,7 +92,7 @@ class JaxBackend(Backend):  # noqa: PLR0904
     def copy(self, x: Array) -> Array:
         return Array(jnp.array(x.value, copy=True))
 
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         return np.array(x.value if type(x) is Array else x)
 
     def from_numpy(self, x: NDArray[Any]) -> Array:
@@ -459,4 +459,4 @@ def _x64_enabled() -> bool:
     return bool(_JAX_CONFIG_READ("jax_enable_x64"))
 
 
-register_backend(SupportedFrameworks.JAX, JaxBackend)
+register_backend(Frameworks.JAX, JaxBackend)

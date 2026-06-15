@@ -17,7 +17,7 @@ from numpy.typing import NDArray
 from decent_array import Array
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, SupportedFrameworks
+from decent_array.types import ArrayKey, DTypes, ArrayTypes, Devices, Frameworks
 
 
 def _unwrap(x: Any) -> Any:  # noqa: ANN401
@@ -51,8 +51,8 @@ _DTYPE_MAP = {
 class NumpyBackend(Backend):  # noqa: PLR0904
     """NumPy implementation of :class:`Backend`."""
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
-        if device != SupportedDevices.CPU:
+    def __init__(self, device: Devices = Devices.CPU) -> None:
+        if device != Devices.CPU:
             raise ValueError(f"NumPy backend only supports CPU, got '{device.value}'.")
         super().__init__(device)
         self._rng: np.random.Generator = np.random.default_rng()
@@ -74,12 +74,12 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     def eye(self, n: int) -> Array:
         return Array(np.eye(n))
 
-    def device_to_native(self, device: SupportedDevices) -> Any:  # noqa: ANN401
+    def device_to_native(self, device: Devices) -> Any:  # noqa: ANN401
         # NumPy has no explicit device management; surface the request unchanged.
         return device
 
-    def device_of(self, x: Array) -> SupportedDevices:  # noqa: ARG002
-        return SupportedDevices.CPU
+    def device_of(self, x: Array) -> Devices:  # noqa: ARG002
+        return Devices.CPU
 
     # Array manipulation
 
@@ -89,7 +89,7 @@ class NumpyBackend(Backend):  # noqa: PLR0904
             return Array(np.copy(v))
         return Array(deepcopy(v))
 
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         """Return the value of an :class:`Array` as a NumPy array."""
         v = x.value if type(x) is Array else x
         if isinstance(v, np.ndarray):
@@ -460,4 +460,4 @@ class NumpyBackend(Backend):  # noqa: PLR0904
         return np.dtype(np.void)
 
 
-register_backend(SupportedFrameworks.NUMPY, NumpyBackend)
+register_backend(Frameworks.NUMPY, NumpyBackend)

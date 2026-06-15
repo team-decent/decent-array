@@ -17,7 +17,7 @@ from numpy.typing import NDArray
 from decent_array import Array
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, SupportedFrameworks
+from decent_array.types import ArrayKey, DTypes, ArrayTypes, Devices, Frameworks
 
 
 def _unwrap(x: Any) -> Any:  # noqa: ANN401
@@ -45,7 +45,7 @@ _DTYPE_MAP = {
 class PyTorchBackend(Backend):  # noqa: PLR0904
     """PyTorch implementation of :class:`Backend`."""
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
+    def __init__(self, device: Devices = Devices.CPU) -> None:
         super().__init__(device)
         self._native_device: str = self.device_to_native(device)
         self._generator: torch.Generator = torch.Generator(device=self._native_device)
@@ -67,23 +67,23 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
     def eye(self, n: int) -> Array:
         return Array(torch.eye(n, device=self._native_device))
 
-    def device_to_native(self, device: SupportedDevices) -> str:
-        if device == SupportedDevices.CPU:
+    def device_to_native(self, device: Devices) -> str:
+        if device == Devices.CPU:
             return "cpu"
-        if device == SupportedDevices.GPU:
+        if device == Devices.GPU:
             return "cuda"
-        if device == SupportedDevices.MPS:
+        if device == Devices.MPS:
             return "mps"
         raise ValueError(f"Unsupported device: {device}")
 
-    def device_of(self, x: Array) -> SupportedDevices:
+    def device_of(self, x: Array) -> Devices:
         kind = x.value.device.type
         if kind == "cpu":
-            return SupportedDevices.CPU
+            return Devices.CPU
         if kind == "cuda":
-            return SupportedDevices.GPU
+            return Devices.GPU
         if kind == "mps":
-            return SupportedDevices.MPS
+            return Devices.MPS
         raise TypeError(f"Unsupported PyTorch device type: {kind}")
 
     # Array manipulation
@@ -91,7 +91,7 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
     def copy(self, x: Array) -> Array:
         return Array(x.value.detach().clone())
 
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         """Return the value of an :class:`Array` as a NumPy array."""
         v = x.value if type(x) is Array else x
         if isinstance(v, torch.Tensor):
@@ -485,4 +485,4 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
         return torch.bfloat16
 
 
-register_backend(SupportedFrameworks.PYTORCH, PyTorchBackend)
+register_backend(Frameworks.PYTORCH, PyTorchBackend)

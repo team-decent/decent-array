@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
     from decent_array import Array
     from decent_array.types._dtypes import dtype
-    from decent_array.types._types import ArrayKey, ArrayTypes
+    from decent_array.types import ArrayKey, ArrayTypes
 
 
 class Backend(ABC):  # noqa: PLR0904

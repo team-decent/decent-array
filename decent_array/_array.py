@@ -402,7 +402,7 @@ class Array:  # noqa: PLR0904
 
     @property
     def dtype(self) -> dtype:
-        """Return dtype of the Array."""
+        """Return dtype of the Array."""  # noqa: DOC501
         dtype = _BACKEND_DTYPE_TO_DTYPE.get(self.value.dtype)
 
         if dtype is None:

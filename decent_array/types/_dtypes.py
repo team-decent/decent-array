@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from decent_array.interoperability import _backend_manager
-
-if TYPE_CHECKING:
-    from decent_array.interoperability._abstracts import Backend
-
 
 _error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
 
@@ -168,10 +164,6 @@ def dtypes(*, kind: str | tuple[str, ...] | None = None) -> dict[str, dtype]:
     elif isinstance(kind, str):
         dtypes = _ALIASES.get(kind, {})
     else:
-        dtypes = {
-            k: v
-            for alias in kind if alias in _ALIASES
-            for k, v in _ALIASES[alias].items()
-        }
+        dtypes = {k: v for alias in kind if alias in _ALIASES for k, v in _ALIASES[alias].items()}
 
     return {name: dt for name, dt in dtypes.items() if dt.available}

@@ -4,7 +4,9 @@ import importlib
 from collections.abc import Callable
 from contextvars import ContextVar
 
+from decent_array import types
 from decent_array.types import Devices, Frameworks
+from decent_array.types._dtypes import _SUPPORTED
 
 from ._abstracts import Backend
 
@@ -68,6 +70,8 @@ def set_backend(
         _BACKEND_INSTANCE = cached
         for listener in _BACKEND_LISTENERS:
             listener(_BACKEND_INSTANCE)
+
+    _bind_dtypes(_BACKEND_INSTANCE)
 
 
 def register_backend_listener(listener: Callable[[Backend | None], None]) -> None:
@@ -202,3 +206,14 @@ def _auto_import(backend: Frameworks) -> None:
             f"Failed to import the backend module for '{backend.value}'. Ensure the "
             "corresponding backend package is installed and importable."
         ) from exc
+
+
+def _bind_dtypes(backend: Backend | None) -> None:
+    """Bind dtype objects to the corresponding backend dtypes (if available)."""
+    if backend is None:
+        return
+    for name in _SUPPORTED:
+        dt = getattr(types, name)
+        backend_dt = getattr(backend, name, None)
+        dt._available = backend_dt is not None  # noqa: SLF001
+        dt._backend_dtype = backend_dt  # noqa: SLF001

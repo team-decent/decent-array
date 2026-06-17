@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from decent_array import Array
-    from decent_array.types import ArrayKey, DTypes, ArrayTypes
+    from decent_array.types import ArrayKey, ArrayTypes, dtype
 
 
 class Backend(ABC):  # noqa: PLR0904
@@ -135,7 +135,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Extract the diagonal entries from a 2-D matrix at the given ``offset``."""
 
     @abstractmethod
-    def astype(self, x: Array, dtype: DTypes) -> Array:
+    def astype(self, x: Array, dtype: dtype) -> Array:
         """Cast ``x`` to a different dtype."""
 
     # Linalg --------------------------------------------------------------

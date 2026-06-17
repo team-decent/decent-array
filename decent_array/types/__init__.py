@@ -1,51 +1,83 @@
-from typing import TYPE_CHECKING
+from decent_array.types._dtypes import (
+    bfloat16,
+    bool_,
+    bytes_,
+    complex64,
+    complex128,
+    complex256,
+    dtype,
+    dtypes,
+    float16,
+    float32,
+    float64,
+    float128,
+    int8,
+    int16,
+    int32,
+    int64,
+    object_,
+    qint8,
+    qint16,
+    qint32,
+    quint8,
+    quint16,
+    uint8,
+    uint16,
+    uint32,
+    uint64,
+    unicode_,
+    void,
+)
+from decent_array.types._types import (
+    ArrayKey,
+    ArrayLike,
+    ArrayTypes,
+    Devices,
+    Frameworks,
+)
 
-from decent_array.types._dtypes import _ALL_DTYPES, dtype, dtypes
-from decent_array.types._types import (
-    ArrayKey as ArrayKey,
-)
-from decent_array.types._types import (
-    ArrayLike as ArrayLike,
-)
-from decent_array.types._types import (
-    DTypes as DTypes,
-)
-from decent_array.types._types import (
-    ArrayTypes as ArrayTypes,
-)
-from decent_array.types._types import (
-    Devices as Devices,
-)
-from decent_array.types._types import (
-    Frameworks as Frameworks,
-)
-
-_static_exports = [  # noqa: RUF067
+__all_docs__ = [
+    "ArrayKey",
     "ArrayLike",
     "ArrayTypes",
-    "ArrayKey",
-    "Frameworks",
     "Devices",
-    "DTypes",
+    "Frameworks",
     "dtype",
     "dtypes",
 ]
-
-_all_dtypes = list(_ALL_DTYPES.keys())  # noqa: RUF067
-_available_dtypes = [name for name, dt in _ALL_DTYPES.items() if dt.available]  # noqa: RUF067
-
-__all_docs__ = _static_exports + _all_dtypes
 
 __all__ = [
     "ArrayKey",
     "ArrayLike",
-    "DTypes",
     "ArrayTypes",
     "Devices",
     "Frameworks",
+    "bfloat16",
+    "bool_",
+    "bytes_",
+    "complex64",
+    "complex128",
+    "complex256",
     "dtype",
     "dtypes",
+    "float16",
+    "float32",
+    "float64",
+    "float128",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "object_",
+    "qint8",
+    "qint16",
+    "qint32",
+    "quint8",
+    "quint16",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "unicode_",
+    "void",
 ]
-
-if not TYPE_CHECKING:  # noqa: RUF067
-    __all__ += _available_dtypes  # noqa: PLE0605

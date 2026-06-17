@@ -6,11 +6,11 @@ import numpy as np
 import pytest
 
 import decent_array.interoperability as iop
+import decent_array.types as types
 from decent_array import Array
 from decent_array.interoperability._backend_manager import reset_backends
 from decent_array.interoperability._iop.math import iadd, idivide, imultiply, isubtract
 from decent_array.interoperability._iop.utils import device_to_native, get_item, set_item
-from decent_array.types import DTypes
 
 
 def _np(arr: Array) -> np.ndarray:
@@ -219,7 +219,7 @@ def test_diagonal_with_offset(backend: tuple) -> None:
 
 def test_astype_to_float(backend: tuple) -> None:
     arr = iop.asarray(3.0)
-    out = iop.astype(arr, DTypes.FLOAT32)
+    out = iop.astype(arr, types.float32)
     np_out = _np(out)
     assert np_out.dtype == np.float32
     assert np_out == pytest.approx(3.0)
@@ -227,7 +227,7 @@ def test_astype_to_float(backend: tuple) -> None:
 
 def test_astype_to_int(backend: tuple) -> None:
     arr = iop.asarray(3.0)
-    out = iop.astype(arr, DTypes.INT32)
+    out = iop.astype(arr, types.int32)
     np_out = _np(out)
     assert np_out.dtype == np.int32
     assert int(np_out) == 3
@@ -235,7 +235,7 @@ def test_astype_to_int(backend: tuple) -> None:
 
 def test_astype_to_bool(backend: tuple) -> None:
     arr = iop.asarray(1.0)
-    out = iop.astype(arr, DTypes.BOOL)
+    out = iop.astype(arr, types.bool_)
     np_out = _np(out)
     assert np_out.dtype == np.bool_
     assert bool(np_out) is True
@@ -697,7 +697,7 @@ def test_function_raises_when_no_backend() -> None:
 
 def test_to_array_round_trip_with_bool(backend: tuple) -> None:
     arr = iop.asarray(True)
-    out = iop.astype(arr, DTypes.BOOL)
+    out = iop.astype(arr, types.bool_)
     np_out = _np(out)
     assert np_out.dtype == np.bool_
     assert bool(np_out) is True

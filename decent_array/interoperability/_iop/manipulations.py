@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from decent_array import Array
     from decent_array.interoperability._abstracts import Backend
-    from decent_array.types import DTypes, ArrayTypes
+    from decent_array.types import ArrayTypes, dtype
 
 _BACKEND_INSTANCE: Backend | None = None
 _error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
@@ -156,7 +156,7 @@ def diagonal(x: Array, offset: int = 0) -> Array:
     return _BACKEND_INSTANCE.diagonal(x, offset)
 
 
-def astype(x: Array, dtype: DTypes) -> Array:
+def astype(x: Array, dtype: dtype) -> Array:
     """Cast ``x`` to a different dtype."""
     if _BACKEND_INSTANCE is None:
         raise _error

@@ -29,13 +29,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Self
 
 from decent_array.interoperability._backend_manager import register_backend_listener
-from decent_array.types import _STRING_TO_DTYPE
+from decent_array.types._dtypes import _BACKEND_DTYPE_TO_DTYPE
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from decent_array.interoperability._abstracts import Backend
-    from decent_array.types import ArrayKey, DTypes, ArrayTypes, Devices
+    from decent_array.types import ArrayKey, ArrayTypes, Devices, dtype
 
 
 _BACKEND_INSTANCE: Backend | None = None
@@ -401,19 +401,10 @@ class Array:  # noqa: PLR0904
         return self._backend.ndim(self)
 
     @property
-    def dtype(self) -> DTypes:
-        """
-        Return dtype of the Array as item of DTypes enum.
+    def dtype(self) -> dtype:
+        """Return dtype of the Array."""
+        dtype = _BACKEND_DTYPE_TO_DTYPE.get(self.value.dtype)
 
-        Raises:
-            ValueError: for dtypes that are not supported by all decent-array functions
-
-        """
-        # get framework-native dtype as string
-        # split takes care of types with names like "torch.float32"
-        dtype_name = str(self.value.dtype).split(".")[-1]
-
-        dtype = _STRING_TO_DTYPE.get(dtype_name)
         if dtype is None:
             raise ValueError(f"dtype {self.value.dtype} is not supported by all decent-array functions.")
 

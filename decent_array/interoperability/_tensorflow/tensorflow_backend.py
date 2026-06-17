@@ -20,30 +20,13 @@ from numpy.typing import NDArray
 from decent_array import Array
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, ArrayTypes, Devices, Frameworks
+from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks, dtype
+from decent_array.types._dtypes import _ALL_DTYPES
 
 
 def _unwrap(x: Any) -> Any:  # noqa: ANN401
     """Return the underlying value of an :class:`Array`, or pass ``x`` through."""
     return x.value if type(x) is Array else x
-
-
-_DTYPE_MAP = {
-    DTypes.BOOL: tf.bool,
-    DTypes.UINT8: tf.uint8,
-    DTypes.INT8: tf.int8,
-    DTypes.UINT16: tf.uint16,
-    DTypes.INT16: tf.int16,
-    DTypes.UINT32: tf.uint32,
-    DTypes.INT32: tf.int32,
-    DTypes.UINT64: tf.uint64,
-    DTypes.INT64: tf.int64,
-    DTypes.FLOAT16: tf.float16,
-    DTypes.FLOAT32: tf.float32,
-    DTypes.FLOAT64: tf.float64,
-    DTypes.COMPLEX64: tf.complex64,
-    DTypes.COMPLEX128: tf.complex128,
-}
 
 
 class TensorflowBackend(Backend):  # noqa: PLR0904
@@ -163,10 +146,10 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
             raise ValueError(f"diagonal requires a 2-D tensor, got rank {rank}")
         return Array(tf.linalg.diag_part(v, k=offset))
 
-    def astype(self, x: Array, dtype: DTypes) -> Array:
-        if dtype not in _DTYPE_MAP:
-            raise ValueError(f"Unsupported dtype '{dtype.value}' for TensorFlow backend.")
-        return Array(tf.cast(x.value, dtype=_DTYPE_MAP[dtype]))
+    def astype(self, x: Array, dtype: dtype) -> Array:
+        if dtype not in _ALL_DTYPES.values():
+            raise ValueError(f"Unsupported dtype '{dtype}' for TensorFlow backend.")
+        return Array(tf.cast(x.value, dtype=dtype.backend_dtype))
 
     # Linalg
 

@@ -22,29 +22,13 @@ from numpy.typing import NDArray
 from decent_array import Array
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, ArrayTypes, Devices, Frameworks
+from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks, dtype
+from decent_array.types._dtypes import _ALL_DTYPES
 
 
 def _unwrap(x: Any) -> Any:  # noqa: ANN401
     """Return the underlying value of an :class:`Array`, or pass ``x`` through."""
     return x.value if type(x) is Array else x
-
-
-_DTYPE_MAP = {
-    DTypes.BOOL: jnp.bool_,
-    DTypes.UINT8: jnp.uint8,
-    DTypes.UINT16: jnp.uint16,
-    DTypes.UINT32: jnp.uint32,
-    DTypes.UINT64: jnp.uint64,
-    DTypes.INT8: jnp.int8,
-    DTypes.INT16: jnp.int16,
-    DTypes.INT32: jnp.int32,
-    DTypes.INT64: jnp.int64,
-    DTypes.FLOAT32: jnp.float32,
-    DTypes.FLOAT64: jnp.float64,
-    DTypes.COMPLEX64: jnp.complex64,
-    DTypes.COMPLEX128: jnp.complex128,
-}
 
 
 class JaxBackend(Backend):  # noqa: PLR0904
@@ -147,10 +131,10 @@ class JaxBackend(Backend):  # noqa: PLR0904
             raise ValueError(f"diagonal requires a 2-D array, got {x.value.ndim}-D")
         return Array(jnp.diagonal(x.value, offset=offset))
 
-    def astype(self, x: Array, dtype: DTypes) -> Array:
-        if dtype not in _DTYPE_MAP:
-            raise ValueError(f"Unsupported dtype '{dtype.value}' for NumPy backend.")
-        return Array(jnp.asarray(x.value, dtype=_DTYPE_MAP[dtype]))
+    def astype(self, x: Array, dtype: dtype) -> Array:
+        if dtype not in _ALL_DTYPES.values():
+            raise ValueError(f"Unsupported dtype '{dtype}' for JAX backend.")
+        return Array(jnp.asarray(x.value, dtype=dtype.backend_dtype))
 
     # Linalg
 

@@ -150,6 +150,28 @@ for dt in _ALL_DTYPES.values():
         _BACKEND_DTYPE_TO_DTYPE[dt._backend_dtype] = dt  # noqa: SLF001
 
 
-def dtypes() -> dict[str, dtype]:
+_ALIASES = {
+    "bool": _BOOL_DTYPES,
+    "signed integer": _SIGNED_INT_DTYPES,
+    "unsigned integer": _UNSIGNED_INT_DTYPES,
+    "integral": _INTEGRAL_DTYPES,
+    "real floating": _REAL_FLOATING_DTYPES,
+    "complex floating": _COMPLEX_FLOATING_DTYPES,
+    "numeric": _NUMERIC_DTYPES,
+}
+
+
+def dtypes(*, kind: str | tuple[str, ...] | None = None) -> dict[str, dtype]:
     """Return a dictionary of available dtypes."""
-    return {name: dt for name, dt in _ALL_DTYPES.items() if dt.available}
+    if kind is None:
+        dtypes = _ALL_DTYPES
+    elif isinstance(kind, str):
+        dtypes = _ALIASES.get(kind, {})
+    else:
+        dtypes = {
+            k: v
+            for alias in kind if alias in _ALIASES
+            for k, v in _ALIASES[alias].items()
+        }
+
+    return {name: dt for name, dt in dtypes.items() if dt.available}

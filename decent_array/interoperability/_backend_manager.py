@@ -5,7 +5,7 @@ from collections.abc import Callable
 from contextvars import ContextVar
 
 from decent_array import types
-from decent_array.types import Devices, Frameworks
+from decent_array.types._types import Devices, Frameworks
 from decent_array.types._dtypes import _SUPPORTED
 
 from ._abstracts import Backend

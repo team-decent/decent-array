@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from decent_array.interoperability import _backend_manager
+
+if TYPE_CHECKING:
+    from decent_array.interoperability._abstracts import Backend
+
+
+_error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
+
 
 _SUPPORTED = {
     "bfloat16",
@@ -42,10 +51,12 @@ class dtype:  # noqa: N801
         if name not in _SUPPORTED:
             raise ValueError(f"dtype {name} is not supported. Supported dtypes: {', '.join(_SUPPORTED)}")
 
-        # initialize with placeholder values
+        # initialize with backend dtype; if backend is not initialized, it sets placeholder values and set_backend
+        # will then bind the backend dtypes
+        backend_instance = getattr(_backend_manager, "_BACKEND_INSTANCE", None)
         self._name = name
-        self._backend_dtype: Any = None
-        self._available = False
+        self._backend_dtype: Any = None if backend_instance is None else getattr(backend_instance, name, None)
+        self._available = self._backend_dtype is not None
 
     @property
     def name(self) -> str:

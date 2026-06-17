@@ -18,13 +18,14 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
-from decent_array.types import Devices
+from decent_array.types._types import Devices
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from decent_array import Array
-    from decent_array.types import ArrayKey, ArrayTypes, dtype
+    from decent_array.types._dtypes import dtype
+    from decent_array.types._types import ArrayKey, ArrayTypes
 
 
 class Backend(ABC):  # noqa: PLR0904

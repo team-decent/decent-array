@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 
     from decent_array import Array
     from decent_array.interoperability._abstracts import Backend
-    from decent_array.types._dtypes import dtype
     from decent_array.types import ArrayTypes
+    from decent_array.types._dtypes import dtype
 
 _BACKEND_INSTANCE: Backend | None = None
 _error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")

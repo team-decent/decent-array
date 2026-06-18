@@ -28,6 +28,10 @@ extensions = [
     "sphinx.ext.viewcode",  # View source code
 ]
 
+autodoc_type_aliases = {
+    "ArrayTypes": "decent_array.types.ArrayTypes",
+}
+
 nitpicky = True
 nitpick_ignore = [
     ("py:class", "numpy.float64"),

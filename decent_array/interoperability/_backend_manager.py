@@ -5,8 +5,7 @@ from collections.abc import Callable
 from contextvars import ContextVar
 
 import decent_array._constants as constants
-from decent_array import types
-from decent_array.types._dtypes import _SUPPORTED
+import decent_array.types._dtypes as dtypes
 from decent_array.types._types import Devices, Frameworks
 
 from ._abstracts import Backend
@@ -214,8 +213,8 @@ def _bind_dtypes(backend: Backend | None) -> None:
     """Bind dtype objects to the corresponding backend dtypes (if available)."""
     if backend is None:
         return
-    for name in _SUPPORTED:
-        dt = getattr(types, name)
+    for name in dtypes._SUPPORTED:  # noqa: SLF001
+        dt = getattr(dtypes, name)
         backend_dt = getattr(backend, name, None)
         dt._available = backend_dt is not None  # noqa: SLF001
         dt._backend_dtype = backend_dt  # noqa: SLF001

@@ -6,7 +6,6 @@ from typing import Any
 
 from decent_array.interoperability import _backend_manager
 
-
 _SUPPORTED = {
     "bfloat16",
     "bool_",

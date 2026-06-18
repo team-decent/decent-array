@@ -17,8 +17,8 @@ from numpy.typing import NDArray
 from decent_array import Array
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types._dtypes import _ALL_DTYPES, dtype
 from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
+from decent_array.types._dtypes import _ALL_DTYPES, dtype
 
 
 def _unwrap(x: Any) -> Any:  # noqa: ANN401

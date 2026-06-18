@@ -4,6 +4,7 @@ import importlib
 from collections.abc import Callable
 from contextvars import ContextVar
 
+import decent_array._constants as constants
 from decent_array import types
 from decent_array.types._dtypes import _SUPPORTED
 from decent_array.types._types import Devices, Frameworks
@@ -72,6 +73,7 @@ def set_backend(
             listener(_BACKEND_INSTANCE)
 
     _bind_dtypes(_BACKEND_INSTANCE)
+    _bind_constants(_BACKEND_INSTANCE)
 
 
 def register_backend_listener(listener: Callable[[Backend | None], None]) -> None:
@@ -217,3 +219,14 @@ def _bind_dtypes(backend: Backend | None) -> None:
         backend_dt = getattr(backend, name, None)
         dt._available = backend_dt is not None  # noqa: SLF001
         dt._backend_dtype = backend_dt  # noqa: SLF001
+
+
+def _bind_constants(backend: Backend | None) -> None:
+    """Bind constants to the corresponding backend constants."""
+    if backend is None:
+        return
+    for name in constants._CONSTANTS:  # noqa: SLF001
+        backend_c = getattr(backend, name, None)
+        if backend_c is None:
+            return
+        setattr(constants, name, backend_c)

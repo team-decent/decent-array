@@ -6,8 +6,6 @@ from typing import Any
 
 from decent_array.interoperability import _backend_manager
 
-_error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
-
 
 _SUPPORTED = {
     "bfloat16",

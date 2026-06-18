@@ -17,8 +17,8 @@ from numpy.typing import NDArray
 from decent_array import Array
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks, dtype
-from decent_array.types._dtypes import _ALL_DTYPES
+from decent_array.types._dtypes import _ALL_DTYPES, dtype
+from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
 
 
 def _unwrap(x: Any) -> Any:  # noqa: ANN401
@@ -442,6 +442,28 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     @property
     def void(self) -> Any:  # noqa: ANN401
         return np.dtype(np.void)
+
+    # Constants
+
+    @property
+    def e(self) -> Any:  # noqa: ANN401
+        """e = 2.71828..."""  # noqa: D403
+        return np.e
+
+    @property
+    def inf(self) -> Any:  # noqa: ANN401
+        """Infinity."""
+        return np.inf
+
+    @property
+    def nan(self) -> Any:  # noqa: ANN401
+        """Not-a-number."""
+        return np.nan
+
+    @property
+    def pi(self) -> Any:  # noqa: ANN401
+        """pi = 3.14159..."""  # noqa: D403
+        return np.pi
 
 
 register_backend(Frameworks.NUMPY, NumpyBackend)

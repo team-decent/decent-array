@@ -10,13 +10,19 @@ Requires `Python 3.13+ <https://www.python.org/downloads/>`_
     pip install decent-array
 
 
+Constants
+---------
+
+decent-array exposes `e`, `inf`, `nan`, `pi` constants (`from decent_array import e`), which are bound to the
+corresponding framework-native constants. If the constants are not bound, they fall back on the `math` constants.
+
+
 dtypes
 ------
 
 decent-array exposes a number of dtypes which are bound to the corresponding framework-native dtypes.
 decent-array exposes dtypes as instances of :class:`~decent_array.types.dtype`, which can be accessed as
-`from decent_array.types import float32` or just `types.float32`. Additionally, dtypes can be accessed by
-`dtype("float32")`.
+`from decent_array import float32`. Additionally, dtypes can be accessed by `dtype("float32")`.
 
 dtypes have attributes: :attr:`~decent_array.types.dtype.name`, :attr:`~decent_array.types.dtype.available` (see 
 discussion below), :attr:`~decent_array.types.dtype.backend_dtype` (which binds the dtype to the corresponding

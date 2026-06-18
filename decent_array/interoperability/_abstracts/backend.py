@@ -526,3 +526,25 @@ class Backend(ABC):  # noqa: PLR0904
     def void(self) -> Any | None:  # noqa: ANN401
         """Raw/void dtype (optional)."""
         return None
+
+    # CONSTANTS -----------------------------------------------------------
+
+    @property
+    @abstractmethod
+    def e(self) -> Any:  # noqa: ANN401
+        """e = 2.71828..."""  # noqa: D403
+
+    @property
+    @abstractmethod
+    def inf(self) -> Any:  # noqa: ANN401
+        """Infinity."""
+
+    @property
+    @abstractmethod
+    def nan(self) -> Any:  # noqa: ANN401
+        """Not-a-number."""
+
+    @property
+    @abstractmethod
+    def pi(self) -> Any:  # noqa: ANN401
+        """pi = 3.14159..."""  # noqa: D403

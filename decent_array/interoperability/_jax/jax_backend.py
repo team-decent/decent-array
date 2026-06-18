@@ -20,22 +20,18 @@ import numpy as np
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
 from decent_array.types._dtypes import _ALL_DTYPES, dtype
 
 
-def _unwrap(x: Any) -> Any:  # noqa: ANN401
-    """Return the underlying value of an :class:`Array`, or pass ``x`` through."""
-    return x.value if type(x) is Array else x
-
-
 class JaxBackend(Backend):  # noqa: PLR0904
     """JAX implementation of :class:`Backend`."""
 
     def __init__(self, device: Devices = Devices.CPU) -> None:
-        super().__init__(device)
+        super().__init__(device, name=Frameworks.JAX.value)
         self._native_device: jax.Device = self.device_to_native(device)
         self._key: jax.Array = jax.random.key(time_ns())
 
@@ -182,52 +178,52 @@ class JaxBackend(Backend):  # noqa: PLR0904
     # covers both because PEP 484's numeric tower implicitly admits ``int``.
 
     def add(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.add(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.add(unwrap(x1), unwrap(x2)))
 
     def iadd[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.add(x1.value, _unwrap(x2))
+        x1.value = jnp.add(x1.value, unwrap(x2))
         return x1
 
     def subtract(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.subtract(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.subtract(unwrap(x1), unwrap(x2)))
 
     def isubtract[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.subtract(x1.value, _unwrap(x2))
+        x1.value = jnp.subtract(x1.value, unwrap(x2))
         return x1
 
     def multiply(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.multiply(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.multiply(unwrap(x1), unwrap(x2)))
 
     def imultiply[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.multiply(x1.value, _unwrap(x2))
+        x1.value = jnp.multiply(x1.value, unwrap(x2))
         return x1
 
     def divide(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.divide(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.divide(unwrap(x1), unwrap(x2)))
 
     def idivide[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.divide(x1.value, _unwrap(x2))
+        x1.value = jnp.divide(x1.value, unwrap(x2))
         return x1
 
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(jnp.floor_divide(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.floor_divide(unwrap(x1), unwrap(x2)))
 
     def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value = jnp.floor_divide(x1.value, _unwrap(x2))
+        x1.value = jnp.floor_divide(x1.value, unwrap(x2))
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(jnp.remainder(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.remainder(unwrap(x1), unwrap(x2)))
 
     def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value = jnp.remainder(x1.value, _unwrap(x2))
+        x1.value = jnp.remainder(x1.value, unwrap(x2))
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.power(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.power(unwrap(x1), unwrap(x2)))
 
     def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.power(x1.value, _unwrap(x2))
+        x1.value = jnp.power(x1.value, unwrap(x2))
         return x1
 
     def negative(self, x: Array) -> Array:
@@ -242,61 +238,61 @@ class JaxBackend(Backend):  # noqa: PLR0904
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.equal(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.equal(unwrap(x1), unwrap(x2)))
 
     def not_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.not_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.not_equal(unwrap(x1), unwrap(x2)))
 
     def less(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.less(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.less(unwrap(x1), unwrap(x2)))
 
     def less_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.less_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.less_equal(unwrap(x1), unwrap(x2)))
 
     def greater(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.greater(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.greater(unwrap(x1), unwrap(x2)))
 
     def greater_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.greater_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.greater_equal(unwrap(x1), unwrap(x2)))
 
     # Bitwise
 
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(jnp.bitwise_and(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.bitwise_and(unwrap(x1), unwrap(x2)))
 
     def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value = jnp.bitwise_and(x1.value, _unwrap(x2))
+        x1.value = jnp.bitwise_and(x1.value, unwrap(x2))
         return x1
 
     def bitwise_invert(self, x: Array) -> Array:
         return Array(jnp.bitwise_not(x.value))
 
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(jnp.bitwise_or(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.bitwise_or(unwrap(x1), unwrap(x2)))
 
     def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value = jnp.bitwise_or(x1.value, _unwrap(x2))
+        x1.value = jnp.bitwise_or(x1.value, unwrap(x2))
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(jnp.bitwise_xor(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.bitwise_xor(unwrap(x1), unwrap(x2)))
 
     def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value = jnp.bitwise_xor(x1.value, _unwrap(x2))
+        x1.value = jnp.bitwise_xor(x1.value, unwrap(x2))
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(jnp.left_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.left_shift(unwrap(x1), unwrap(x2)))
 
     def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value = jnp.left_shift(x1.value, _unwrap(x2))
+        x1.value = jnp.left_shift(x1.value, unwrap(x2))
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(jnp.right_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.right_shift(unwrap(x1), unwrap(x2)))
 
     def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value = jnp.right_shift(x1.value, _unwrap(x2))
+        x1.value = jnp.right_shift(x1.value, unwrap(x2))
         return x1
 
     # Operators
@@ -305,7 +301,7 @@ class JaxBackend(Backend):  # noqa: PLR0904
         return Array(jnp.sign(x.value))
 
     def maximum(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.maximum(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.maximum(unwrap(x1), unwrap(x2)))
 
     def argmax(self, x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return Array(jnp.argmax(x.value, axis=axis, keepdims=keepdims))
@@ -315,7 +311,7 @@ class JaxBackend(Backend):  # noqa: PLR0904
 
     def set_item(self, x: Array, key: ArrayKey, value: bool | int | float | complex | Array) -> None:
         # JAX arrays are immutable; rebind the wrapper to a new array with `key` updated.
-        x.value = x.value.at[key].set(_unwrap(value))
+        x.value = x.value.at[key].set(unwrap(value))
 
     def get_item(self, x: Array, key: ArrayKey) -> Array:
         return Array(x.value[key])

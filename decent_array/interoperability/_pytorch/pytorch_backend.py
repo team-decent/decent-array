@@ -15,22 +15,18 @@ import torch
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
 from decent_array.types._dtypes import _ALL_DTYPES, dtype
 
 
-def _unwrap(x: Any) -> Any:  # noqa: ANN401
-    """Return the underlying value of an :class:`Array`, or pass ``x`` through."""
-    return x.value if type(x) is Array else x
-
-
 class PyTorchBackend(Backend):  # noqa: PLR0904
     """PyTorch implementation of :class:`Backend`."""
 
     def __init__(self, device: Devices = Devices.CPU) -> None:
-        super().__init__(device)
+        super().__init__(device, name=Frameworks.PYTORCH.value)
         self._native_device: str = self.device_to_native(device)
         self._generator: torch.Generator = torch.Generator(device=self._native_device)
 
@@ -203,52 +199,52 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
     # ``Array | float`` covers both: PEP 484's numeric tower implicitly admits ``int``.
 
     def add(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.add(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.add(unwrap(x1), unwrap(x2)))
 
     def iadd[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.add_(_unwrap(x2))
+        x1.value.add_(unwrap(x2))
         return x1
 
     def subtract(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.sub(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.sub(unwrap(x1), unwrap(x2)))
 
     def isubtract[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.sub_(_unwrap(x2))
+        x1.value.sub_(unwrap(x2))
         return x1
 
     def multiply(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.mul(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.mul(unwrap(x1), unwrap(x2)))
 
     def imultiply[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.mul_(_unwrap(x2))
+        x1.value.mul_(unwrap(x2))
         return x1
 
     def divide(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.div(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.div(unwrap(x1), unwrap(x2)))
 
     def idivide[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.div_(_unwrap(x2))
+        x1.value.div_(unwrap(x2))
         return x1
 
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(torch.floor_divide(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.floor_divide(unwrap(x1), unwrap(x2)))
 
     def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value.floor_divide_(_unwrap(x2))
+        x1.value.floor_divide_(unwrap(x2))
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(torch.remainder(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.remainder(unwrap(x1), unwrap(x2)))
 
     def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value.remainder_(_unwrap(x2))
+        x1.value.remainder_(unwrap(x2))
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.pow(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.pow(unwrap(x1), unwrap(x2)))
 
     def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.pow_(_unwrap(x2))
+        x1.value.pow_(unwrap(x2))
         return x1
 
     def negative(self, x: Array) -> Array:
@@ -263,61 +259,61 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.eq(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.eq(unwrap(x1), unwrap(x2)))
 
     def not_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.ne(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.ne(unwrap(x1), unwrap(x2)))
 
     def less(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.lt(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.lt(unwrap(x1), unwrap(x2)))
 
     def less_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.le(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.le(unwrap(x1), unwrap(x2)))
 
     def greater(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.gt(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.gt(unwrap(x1), unwrap(x2)))
 
     def greater_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.ge(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.ge(unwrap(x1), unwrap(x2)))
 
     # Bitwise
 
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(torch.bitwise_and(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_and(unwrap(x1), unwrap(x2)))
 
     def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value.bitwise_and_(_unwrap(x2))
+        x1.value.bitwise_and_(unwrap(x2))
         return x1
 
     def bitwise_invert(self, x: Array) -> Array:
         return Array(torch.bitwise_not(x.value))
 
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(torch.bitwise_or(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_or(unwrap(x1), unwrap(x2)))
 
     def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value.bitwise_or_(_unwrap(x2))
+        x1.value.bitwise_or_(unwrap(x2))
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(torch.bitwise_xor(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_xor(unwrap(x1), unwrap(x2)))
 
     def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value.bitwise_xor_(_unwrap(x2))
+        x1.value.bitwise_xor_(unwrap(x2))
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(torch.bitwise_left_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_left_shift(unwrap(x1), unwrap(x2)))
 
     def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value.bitwise_left_shift_(_unwrap(x2))
+        x1.value.bitwise_left_shift_(unwrap(x2))
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(torch.bitwise_right_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_right_shift(unwrap(x1), unwrap(x2)))
 
     def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value.bitwise_right_shift_(_unwrap(x2))
+        x1.value.bitwise_right_shift_(unwrap(x2))
         return x1
 
     # Operators
@@ -326,7 +322,7 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
         return Array(torch.sign(x.value))
 
     def maximum(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        a, b = _unwrap(x1), _unwrap(x2)
+        a, b = unwrap(x1), unwrap(x2)
         # torch.maximum requires both operands to be Tensors; lift Python scalars to
         # match the dtype/device of the tensor operand so the contract matches numpy.
         if not isinstance(a, torch.Tensor):
@@ -343,7 +339,7 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
         return Array(torch.argmin(x.value, dim=axis, keepdim=keepdims))
 
     def set_item(self, x: Array, key: ArrayKey, value: bool | int | float | complex | Array) -> None:
-        x.value[key] = _unwrap(value)
+        x.value[key] = unwrap(value)
 
     def get_item(self, x: Array, key: ArrayKey) -> Array:
         return Array(x.value[key])

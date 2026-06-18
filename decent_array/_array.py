@@ -406,7 +406,7 @@ class Array:  # noqa: PLR0904
         dtype = _BACKEND_DTYPE_TO_DTYPE.get(self.value.dtype)
 
         if dtype is None:
-            raise ValueError(f"dtype {self.value.dtype} is not supported by all decent-array functions.")
+            raise ValueError(f"dtype {self.value.dtype} is not supported.")
 
         return dtype
 

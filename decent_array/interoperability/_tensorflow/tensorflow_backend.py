@@ -18,22 +18,18 @@ import tensorflow as tf
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
 from decent_array.types._dtypes import _ALL_DTYPES, dtype
 
 
-def _unwrap(x: Any) -> Any:  # noqa: ANN401
-    """Return the underlying value of an :class:`Array`, or pass ``x`` through."""
-    return x.value if type(x) is Array else x
-
-
 class TensorflowBackend(Backend):  # noqa: PLR0904
     """TensorFlow implementation of :class:`Backend`."""
 
     def __init__(self, device: Devices = Devices.CPU) -> None:
-        super().__init__(device)
+        super().__init__(device, name=Frameworks.TENSORFLOW.value)
         self._native_device: str = self.device_to_native(device)
         self._generator: tf.random.Generator = tf.random.Generator.from_non_deterministic_state(alg="philox")
 
@@ -210,52 +206,52 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     # covers both because PEP 484's numeric tower implicitly admits ``int``.
 
     def add(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.add(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.add(unwrap(x1), unwrap(x2)))
 
     def iadd[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.add(x1.value, _unwrap(x2))
+        x1.value = tf.add(x1.value, unwrap(x2))
         return x1
 
     def subtract(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.subtract(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.subtract(unwrap(x1), unwrap(x2)))
 
     def isubtract[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.subtract(x1.value, _unwrap(x2))
+        x1.value = tf.subtract(x1.value, unwrap(x2))
         return x1
 
     def multiply(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.multiply(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.multiply(unwrap(x1), unwrap(x2)))
 
     def imultiply[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.multiply(x1.value, _unwrap(x2))
+        x1.value = tf.multiply(x1.value, unwrap(x2))
         return x1
 
     def divide(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.divide(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.divide(unwrap(x1), unwrap(x2)))
 
     def idivide[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.divide(x1.value, _unwrap(x2))
+        x1.value = tf.divide(x1.value, unwrap(x2))
         return x1
 
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(tf.math.floordiv(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.math.floordiv(unwrap(x1), unwrap(x2)))
 
     def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value = tf.math.floordiv(x1.value, _unwrap(x2))
+        x1.value = tf.math.floordiv(x1.value, unwrap(x2))
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(tf.math.floormod(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.math.floormod(unwrap(x1), unwrap(x2)))
 
     def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value = tf.math.floormod(x1.value, _unwrap(x2))
+        x1.value = tf.math.floormod(x1.value, unwrap(x2))
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.pow(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.pow(unwrap(x1), unwrap(x2)))
 
     def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.pow(x1.value, _unwrap(x2))
+        x1.value = tf.pow(x1.value, unwrap(x2))
         return x1
 
     def negative(self, x: Array) -> Array:
@@ -270,22 +266,22 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.equal(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.equal(unwrap(x1), unwrap(x2)))
 
     def not_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.not_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.not_equal(unwrap(x1), unwrap(x2)))
 
     def less(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.less(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.less(unwrap(x1), unwrap(x2)))
 
     def less_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.less_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.less_equal(unwrap(x1), unwrap(x2)))
 
     def greater(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.greater(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.greater(unwrap(x1), unwrap(x2)))
 
     def greater_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.greater_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.greater_equal(unwrap(x1), unwrap(x2)))
 
     # Bitwise — TF's native ``&`` dispatches to ``tf.math.logical_and`` for bool
     # tensors and ``tf.bitwise.bitwise_and`` for int tensors, matching numpy/torch/jax
@@ -293,41 +289,41 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     # us to one dtype family.
 
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(_unwrap(x1) & _unwrap(x2))
+        return Array(unwrap(x1) & unwrap(x2))
 
     def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value &= _unwrap(x2)
+        x1.value &= unwrap(x2)
         return x1
 
     def bitwise_invert(self, x: Array) -> Array:
         return Array(~x.value)
 
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(_unwrap(x1) | _unwrap(x2))
+        return Array(unwrap(x1) | unwrap(x2))
 
     def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value |= _unwrap(x2)
+        x1.value |= unwrap(x2)
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(_unwrap(x1) ^ _unwrap(x2))
+        return Array(unwrap(x1) ^ unwrap(x2))
 
     def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value ^= _unwrap(x2)
+        x1.value ^= unwrap(x2)
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(tf.bitwise.left_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.bitwise.left_shift(unwrap(x1), unwrap(x2)))
 
     def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value = tf.bitwise.left_shift(x1.value, _unwrap(x2))
+        x1.value = tf.bitwise.left_shift(x1.value, unwrap(x2))
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(tf.bitwise.right_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.bitwise.right_shift(unwrap(x1), unwrap(x2)))
 
     def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value = tf.bitwise.right_shift(x1.value, _unwrap(x2))
+        x1.value = tf.bitwise.right_shift(x1.value, unwrap(x2))
         return x1
 
     # Operators
@@ -336,7 +332,7 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
         return Array(tf.sign(x.value))
 
     def maximum(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.maximum(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.maximum(unwrap(x1), unwrap(x2)))
 
     def argmax(self, x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         v = x.value
@@ -371,7 +367,7 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
         # that hammer set_item in tight loops should consider numpy or pytorch.
         original = x.value
         np_array = original.numpy().copy()
-        np_array[key] = np.asarray(_unwrap(value))
+        np_array[key] = np.asarray(unwrap(value))
         with tf.device(self._native_device):
             x.value = tf.convert_to_tensor(np_array, dtype=original.dtype)
 

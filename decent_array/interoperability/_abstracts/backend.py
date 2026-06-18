@@ -36,8 +36,9 @@ class Backend(ABC):  # noqa: PLR0904
     time; that device is the default for all new arrays produced by this backend.
     """
 
-    def __init__(self, device: Devices = Devices.CPU) -> None:
+    def __init__(self, device: Devices = Devices.CPU, name: str = "") -> None:
         self.device: Devices = device
+        self.name: str = name
 
     # Array creation ------------------------------------------------------
 

@@ -15,21 +15,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
 from decent_array.types._dtypes import _ALL_DTYPES, dtype
-
-
-def _unwrap(x: Any) -> Any:  # noqa: ANN401
-    """
-    Return the underlying value of an :class:`Array`, or pass ``x`` through.
-
-    Typed as ``Any`` because operator dunders may pass either an :class:`Array` or a
-    Python scalar; the strict abstract signature would force a ``cast`` at every call
-    site without runtime benefit.
-    """
-    return x.value if type(x) is Array else x
 
 
 class NumpyBackend(Backend):  # noqa: PLR0904
@@ -38,7 +28,7 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     def __init__(self, device: Devices = Devices.CPU) -> None:
         if device != Devices.CPU:
             raise ValueError(f"NumPy backend only supports CPU, got '{device.value}'.")
-        super().__init__(device)
+        super().__init__(device, name=Frameworks.NUMPY.value)
         self._rng: np.random.Generator = np.random.default_rng()
 
     # Array creation
@@ -182,52 +172,52 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     # ``Array | float`` covers both: PEP 484's numeric tower implicitly admits ``int``.
 
     def add(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.add(_unwrap(x1), _unwrap(x2)))
+        return Array(np.add(unwrap(x1), unwrap(x2)))
 
     def iadd[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value += _unwrap(x2)
+        x1.value += unwrap(x2)
         return x1
 
     def subtract(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.subtract(_unwrap(x1), _unwrap(x2)))
+        return Array(np.subtract(unwrap(x1), unwrap(x2)))
 
     def isubtract[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value -= _unwrap(x2)
+        x1.value -= unwrap(x2)
         return x1
 
     def multiply(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.multiply(_unwrap(x1), _unwrap(x2)))
+        return Array(np.multiply(unwrap(x1), unwrap(x2)))
 
     def imultiply[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value *= _unwrap(x2)
+        x1.value *= unwrap(x2)
         return x1
 
     def divide(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.divide(_unwrap(x1), _unwrap(x2)))
+        return Array(np.divide(unwrap(x1), unwrap(x2)))
 
     def idivide[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value /= _unwrap(x2)
+        x1.value /= unwrap(x2)
         return x1
 
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(np.floor_divide(_unwrap(x1), _unwrap(x2)))
+        return Array(np.floor_divide(unwrap(x1), unwrap(x2)))
 
     def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value //= _unwrap(x2)
+        x1.value //= unwrap(x2)
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(np.remainder(_unwrap(x1), _unwrap(x2)))
+        return Array(np.remainder(unwrap(x1), unwrap(x2)))
 
     def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value %= _unwrap(x2)
+        x1.value %= unwrap(x2)
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.power(_unwrap(x1), _unwrap(x2)))
+        return Array(np.power(unwrap(x1), unwrap(x2)))
 
     def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value **= _unwrap(x2)
+        x1.value **= unwrap(x2)
         return x1
 
     def negative(self, x: Array) -> Array:
@@ -242,61 +232,61 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.equal(_unwrap(x1), _unwrap(x2)))
+        return Array(np.equal(unwrap(x1), unwrap(x2)))
 
     def not_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.not_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(np.not_equal(unwrap(x1), unwrap(x2)))
 
     def less(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.less(_unwrap(x1), _unwrap(x2)))
+        return Array(np.less(unwrap(x1), unwrap(x2)))
 
     def less_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.less_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(np.less_equal(unwrap(x1), unwrap(x2)))
 
     def greater(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.greater(_unwrap(x1), _unwrap(x2)))
+        return Array(np.greater(unwrap(x1), unwrap(x2)))
 
     def greater_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.greater_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(np.greater_equal(unwrap(x1), unwrap(x2)))
 
     # Bitwise
 
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(np.bitwise_and(_unwrap(x1), _unwrap(x2)))
+        return Array(np.bitwise_and(unwrap(x1), unwrap(x2)))
 
     def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value &= _unwrap(x2)
+        x1.value &= unwrap(x2)
         return x1
 
     def bitwise_invert(self, x: Array) -> Array:
         return Array(np.bitwise_not(x.value))
 
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(np.bitwise_or(_unwrap(x1), _unwrap(x2)))
+        return Array(np.bitwise_or(unwrap(x1), unwrap(x2)))
 
     def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value |= _unwrap(x2)
+        x1.value |= unwrap(x2)
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(np.bitwise_xor(_unwrap(x1), _unwrap(x2)))
+        return Array(np.bitwise_xor(unwrap(x1), unwrap(x2)))
 
     def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value ^= _unwrap(x2)
+        x1.value ^= unwrap(x2)
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(np.left_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(np.left_shift(unwrap(x1), unwrap(x2)))
 
     def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value <<= _unwrap(x2)
+        x1.value <<= unwrap(x2)
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(np.right_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(np.right_shift(unwrap(x1), unwrap(x2)))
 
     def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value >>= _unwrap(x2)
+        x1.value >>= unwrap(x2)
         return x1
 
     # Operators
@@ -305,7 +295,7 @@ class NumpyBackend(Backend):  # noqa: PLR0904
         return Array(np.sign(x.value))
 
     def maximum(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.maximum(_unwrap(x1), _unwrap(x2)))
+        return Array(np.maximum(unwrap(x1), unwrap(x2)))
 
     def argmax(self, x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return Array(np.argmax(x.value, axis=axis, keepdims=keepdims))
@@ -314,7 +304,7 @@ class NumpyBackend(Backend):  # noqa: PLR0904
         return Array(np.argmin(x.value, axis=axis, keepdims=keepdims))
 
     def set_item(self, x: Array, key: ArrayKey, value: bool | int | float | complex | Array) -> None:
-        x.value[key] = _unwrap(value)
+        x.value[key] = unwrap(value)
 
     def get_item(self, x: Array, key: ArrayKey) -> Array:
         return Array(x.value[key])

@@ -155,7 +155,19 @@ _ALIASES = {
 
 
 def dtypes(*, kind: str | tuple[str, ...] | None = None) -> dict[str, dtype]:
-    """Return a dictionary of available dtypes."""
+    """
+    Return a dictionary of available dtypes.
+
+    Args:
+        kind: kind of dtypes to be returned, either one string or a tuple of strings; available kinds are: `bool`,
+         `signed integer`, `unsigned integer`, `integral`, `real floating`, `complex floating`, `numeric`. If kind is
+         None, all available dtypes are included. If `kind` does not match any of the supported strings, an empty
+         dictionary is returned.
+
+    Returns:
+        A dictionary of available dtypes, keyed by name, and filtered by `kind`.
+
+    """
     if kind is None:
         dtypes = _ALL_DTYPES
     elif isinstance(kind, str):

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pytest
 
+import decent_array._constants as constants
 from decent_array.interoperability import _backend_manager as backend_manager
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import (
@@ -18,6 +20,7 @@ from decent_array.interoperability._backend_manager import (
     set_backend,
 )
 from decent_array.types import Devices, Frameworks
+from decent_array.types._dtypes import dtype, float32
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -87,6 +90,22 @@ def test_set_backend_with_string_device() -> None:
 def test_set_backend_invalid_name_raises() -> None:
     with pytest.raises(KeyError):
         set_backend("not-a-backend")
+
+
+def test_set_backend_instantiates_dtypes() -> None:
+    dt1 = dtype("float32")  # backend not set, dtype has placeholder values
+    set_backend("numpy", "cpu")
+    dt2 = float32  # global dtype bound during set_dtype
+    dt3 = dtype("float32")  # backend is set, so this is bound to backend dtype
+
+    assert dt1 != dt2  # dtypes are not equal if not avaiable, and dt1 is not available
+    assert dt2 == dt3  # available because bound to backend, and equal
+
+    dt4 = dtype("int16")
+    assert dt3 != dt4
+
+    assert dt2.backend_dtype == np.dtype("float32")  # check global dtype is correctly bound to backend
+    assert dt3.backend_dtype == np.dtype("float32")  # check dtypes instantiated after set_backend are correctly bound to backend
 
 
 # register_backend -------------------------------------------------------

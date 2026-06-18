@@ -74,7 +74,7 @@ class dtype:  # noqa: N801
         """Check equivalence by ``name`` attributes."""
         if not isinstance(other, dtype):
             return NotImplemented
-        return self.name == other.name
+        return self.name == other.name and self.available and other.available
 
     def __hash__(self) -> int:
         """Hash of the dtype."""

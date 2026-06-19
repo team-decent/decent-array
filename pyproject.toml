@@ -194,5 +194,5 @@ lint.ignore = [
   "ICN001",   # unconventional-import-alias, complains about common import aliases like `import numpy as np` but it doesn't work for most libraries
   "PYI041",   # Removes warning for redundant types in cases like int | float | complex where complex already covers int and float, but we want to keep the union for readability and explicitness about supported types.
 ]
-preview = true
+preview = false
 line-length = 120

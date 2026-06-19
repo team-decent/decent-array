@@ -22,7 +22,7 @@ from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
 from decent_array.types._dtypes import _ALL_DTYPES, dtype
 
 
-class NumpyBackend(Backend):  # noqa: PLR0904
+class NumpyBackend(Backend):
     """NumPy implementation of :class:`Backend`."""
 
     def __init__(self, device: Devices = Devices.CPU) -> None:

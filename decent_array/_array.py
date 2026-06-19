@@ -49,7 +49,7 @@ def _update_backend(backend: Backend | None) -> None:
 register_backend_listener(_update_backend)
 
 
-class Array:  # noqa: PLR0904
+class Array:
     """
     Wrapper around a single backend-native array.
 
@@ -402,7 +402,7 @@ class Array:  # noqa: PLR0904
 
     @property
     def dtype(self) -> dtype:
-        """Return dtype of the Array."""  # noqa: DOC501
+        """Return dtype of the Array."""
         dtype = _BACKEND_DTYPE_TO_DTYPE.get(self.value.dtype)
 
         if dtype is None:

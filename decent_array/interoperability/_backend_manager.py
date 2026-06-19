@@ -46,7 +46,7 @@ def set_backend(
             is already active in this context.
         ImportError: If the backend module cannot be imported (e.g. due to a missing optional dependency).
 
-    """  # noqa: DOC502
+    """
     requested = _normalize(backend)
     requested_device = device if isinstance(device, Devices) else Devices(device)
 

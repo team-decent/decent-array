@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from decent_array.types._dtypes import dtype
 
 
-class Backend(ABC):  # noqa: PLR0904
+class Backend(ABC):
     """
     Abstract base class for a backend.
 

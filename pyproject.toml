@@ -22,31 +22,31 @@ Issues = "https://github.com/team-decent/decent-array/issues"
 
 [project.optional-dependencies]
 dev = [
-  "hatch",
-  "mypy",
-  "pytest",
-  "ruff",
-  "torch",
-  "torchvision",
-  "types-tensorflow",
+  "hatch>=1.14,<2",
+  "mypy==2.1.0",
+  "pytest>=9,<10",
+  "ruff==0.15.20",
+  "torch>=2.5,<3",
+  "torchvision>=0.20,<1",
+  "types-tensorflow>=2.18,<3",
 ]
 dev-cpu = [
-  "tensorflow",
-  "jax",
+  "tensorflow>=2.18,<3",
+  "jax>=0.4,<1",
 ]
 dev-gpu = [
-  "tensorflow[and-cuda]",
-  "jax[cuda12]",
+  "tensorflow[and-cuda]>=2.18,<3",
+  "jax[cuda12]>=0.4,<1",
 ]
 sphinx-tools = [
-  "sphinx",
-  "pydata-sphinx-theme",
-  "sphinxcontrib-bibtex",
+  "sphinx==9.1.0",
+  "pydata-sphinx-theme>=0.16,<1",
+  "sphinxcontrib-bibtex>=2.6,<3",
 ]
 
 
 [build-system]
-requires = ["hatchling", "hatch-mypyc"]
+requires = ["hatchling>=1.26,<2", "hatch-mypyc>=0.16.0,<1"]
 build-backend = "hatchling.build"
 # Compile hot-path modules with mypyc when building wheels. End users installing from
 # a wheel get a precompiled .so; ``pip install -e .`` and source builds also run this

@@ -19,7 +19,7 @@ from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
-from decent_array.types._dtypes import _ALL_DTYPES, dtype
+from decent_array.types._dtypes import dtype
 
 
 class PyTorchBackend(Backend):
@@ -138,7 +138,7 @@ class PyTorchBackend(Backend):
         return Array(torch.diagonal(x.value, offset=offset))
 
     def astype(self, x: Array, dtype: dtype) -> Array:
-        if dtype not in _ALL_DTYPES.values():
+        if not dtype.available:
             raise ValueError(f"Unsupported dtype '{dtype}' for PyTorch backend.")
         return Array(x.value.to(dtype=dtype.backend_dtype))
 
@@ -437,7 +437,9 @@ class PyTorchBackend(Backend):
         return torch.float32
 
     @property
-    def float64(self) -> torch.dtype:
+    def float64(self) -> Any:  # noqa: ANN401
+        if self.device == Devices.MPS:
+            return None
         return torch.float64
 
     @property
@@ -461,8 +463,17 @@ class PyTorchBackend(Backend):
         return torch.quint8
 
     @property
-    def bfloat16(self) -> torch.dtype:
-        return torch.bfloat16
+    def bfloat16(self) -> Any:  # noqa: ANN401
+        if self.device == Devices.GPU:
+            return torch.bfloat16 if torch.cuda.is_bf16_supported() else None
+        if self.device == Devices.MPS:
+            return None
+        capabilities = torch.cpu.get_capabilities()
+        return (
+            torch.bfloat16
+            if any(tag in capabilities for tag in ("bf16", "avx512_bf16", "amx_bf16", "sve_bf16"))
+            else None
+        )
 
     # Constants
 

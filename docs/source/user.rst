@@ -182,7 +182,7 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ✓
      - ✓
      - ✓
-     - 
+     - PyTorch support is limited/experimental
    * - ``float32``
      - ✓
      - ✓
@@ -194,7 +194,7 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ⚠️
      - ✓
      - ✓
-     - JAX requires ``jax_enable_x64=True``
+     - JAX requires ``jax_enable_x64=True``; PyTorch does not support on MPS
    * - ``float128``
      - ⚠️
      - ✗

@@ -19,7 +19,7 @@ from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
-from decent_array.types._dtypes import _ALL_DTYPES, dtype
+from decent_array.types._dtypes import dtype
 
 
 class NumpyBackend(Backend):
@@ -123,7 +123,7 @@ class NumpyBackend(Backend):
         return Array(np.diagonal(x.value, offset=offset))
 
     def astype(self, x: Array, dtype: dtype) -> Array:
-        if dtype not in _ALL_DTYPES.values():
+        if not dtype.available:
             raise ValueError(f"Unsupported dtype '{dtype}' for NumPy backend.")
         return Array(np.asarray(x.value, dtype=dtype.backend_dtype))
 

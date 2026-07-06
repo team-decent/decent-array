@@ -31,6 +31,8 @@ def _framework_importable(framework: Frameworks) -> bool:
             import jax  # noqa: F401, PLC0415
         elif framework == Frameworks.TENSORFLOW:
             import tensorflow  # noqa: F401, PLC0415
+        elif framework == Frameworks.CUPY:
+            import cupy  # noqa: F401, PLC0415
     except ImportError:
         return False
     return True
@@ -78,6 +80,16 @@ def _device_available(framework: Frameworks, device: Devices) -> bool:
             try:
                 return len(tf.config.list_physical_devices("GPU")) > 0
             except Exception:
+                return False
+    if framework == Frameworks.CUPY:
+        if device != Devices.GPU:
+            return False
+        import cupy as cp  # noqa: PLC0415
+
+        if device == Devices.GPU:
+            try:
+                return bool(cp.cuda.runtime.getDeviceCount() > 0)
+            except cp.cuda.runtime.CUDARuntimeError:
                 return False
     return False
 

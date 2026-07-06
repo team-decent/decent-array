@@ -38,6 +38,16 @@ jax = [
 jax-gpu = [
   "jax[cuda12]>=0.4,<1",
 ]
+cupy-cuda12 = [
+  "cupy-cuda12x>=14,<15",
+]
+cupy-cuda13 = [
+  "cupy-cuda13x>=14,<15",
+]
+cupy-rocm = [
+  "cupy-rocm-7-0>=14,<15",
+]
+
 
 [dependency-groups]
 lint = ["ruff==0.15.20"]
@@ -77,6 +87,12 @@ include = [
 ]
 mypy-args = ["--ignore-missing-imports"]
 
+[[tool.mypy.overrides]]
+module = "cupy"
+ignore_missing_imports = true
+follow_imports = "skip"
+ignore_errors = true
+
 [tool.tox]
 envlist = ["dev", "mypy", "mypyc", "pytest", "ruff", "sphinx"]
 package = "editable"
@@ -96,7 +112,7 @@ set_env = { PIP_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cu128", HATC
 deps = ["-rdocs/requirements.txt"]
 commands_pre = [
   ["python", "-m", "pip", "install", "--group", "dev"],
-  ["python", "-m", "pip", "install", ".[torch,tf-gpu,jax-gpu]"],
+  ["python", "-m", "pip", "install", ".[torch,tf-gpu,jax-gpu,cupy-cuda12,cupy-cuda13,cupy-rocm]"],
 ]
 
 [tool.tox.env.sphinx]

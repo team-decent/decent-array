@@ -44,6 +44,7 @@ class Frameworks(Enum):
     PYTORCH = "pytorch"
     TENSORFLOW = "tensorflow"
     JAX = "jax"
+    CUPY = "cupy"
 
 
 class Devices(Enum):

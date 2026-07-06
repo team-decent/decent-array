@@ -18,6 +18,13 @@ import tensorflow as tf
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._errors import (
+    MatrixTransposeError,
+    NDimError,
+    UnsupportedDeviceError,
+    UnsupportedDTypeCreationError,
+    stack_empty_error,
+)
 from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
@@ -30,6 +37,8 @@ class TensorflowBackend(Backend):
 
     def __init__(self, device: Devices = Devices.CPU) -> None:
         super().__init__(device, name=Frameworks.TENSORFLOW.value)
+        if device == Devices.MPS:
+            UnsupportedDeviceError(self.name, device.value)
         self._native_device: str = self.device_to_native(device)
         self._generator: tf.random.Generator = tf.random.Generator.from_non_deterministic_state(alg="philox")
 
@@ -109,7 +118,7 @@ class TensorflowBackend(Backend):
 
     def stack(self, arrays: Sequence[Array], axis: int = 0) -> Array:
         if len(arrays) == 0:
-            raise ValueError("Cannot stack an empty sequence of arrays.")
+            raise stack_empty_error
         return Array(tf.stack([a.value for a in arrays], axis=axis))
 
     def reshape(self, x: Array, shape: tuple[int, ...]) -> Array:
@@ -119,11 +128,9 @@ class TensorflowBackend(Backend):
         return Array(tf.transpose(x.value, perm=axis))
 
     def matrix_transpose(self, x: Array) -> Array:
-        v = x.value
-        rank = v.shape.ndims
-        if rank is not None and rank < 2:
-            raise ValueError(f"matrix_transpose requires an array with at least 2 dimensions, got {rank}-D")
-        return Array(tf.linalg.matrix_transpose(v))
+        if x.ndim < 2:
+            raise MatrixTransposeError(x.ndim)
+        return Array(tf.linalg.matrix_transpose(x.value))
 
     def shape(self, x: Array) -> tuple[int, ...]:
         return cast("tuple[int, ...]", tuple(x.value.shape))
@@ -141,22 +148,18 @@ class TensorflowBackend(Backend):
         return Array(tf.expand_dims(x.value, axis=axis))
 
     def diag(self, x: Array) -> Array:
-        v = x.value
-        rank = v.shape.ndims
-        if rank != 1:
-            raise ValueError(f"diag requires a 1-D tensor, got rank {rank}")
-        return Array(tf.linalg.diag(v))
+        if x.ndim != 1:
+            raise NDimError(1, x.ndim)
+        return Array(tf.linalg.diag(x.value))
 
     def diagonal(self, x: Array, offset: int = 0) -> Array:
-        v = x.value
-        rank = v.shape.ndims
-        if rank != 2:
-            raise ValueError(f"diagonal requires a 2-D tensor, got rank {rank}")
-        return Array(tf.linalg.diag_part(v, k=offset))
+        if x.ndim != 2:
+            raise NDimError(2, x.ndim)
+        return Array(tf.linalg.diag_part(x.value, k=offset))
 
     def astype(self, x: Array, dtype: dtype) -> Array:
         if not dtype.available:
-            raise ValueError(f"Unsupported dtype '{dtype}' for TensorFlow backend.")
+            raise UnsupportedDTypeCreationError(dtype, self.name, self.device.value)
         return Array(tf.cast(x.value, dtype=dtype.backend_dtype))
 
     # Linalg

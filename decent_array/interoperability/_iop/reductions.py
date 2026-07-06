@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from decent_array._errors import no_backend_error
 from decent_array.interoperability._backend_manager import register_backend_listener
 
 if TYPE_CHECKING:
@@ -22,7 +23,6 @@ if TYPE_CHECKING:
     from decent_array.interoperability._abstracts import Backend
 
 _BACKEND_INSTANCE: Backend | None = None
-_error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
 
 
 def _update_backend(backend: Backend | None) -> None:
@@ -40,7 +40,7 @@ def sum(  # noqa: A001
 ) -> Array:
     """Sum elements of ``x`` along ``axis``."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.sum(x, axis, keepdims)
 
 
@@ -51,7 +51,7 @@ def mean(
 ) -> Array:
     """Mean of ``x`` along ``axis``."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.mean(x, axis, keepdims)
 
 
@@ -62,7 +62,7 @@ def min(  # noqa: A001
 ) -> Array:
     """Minimum of ``x`` along ``axis``."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.min(x, axis, keepdims)
 
 
@@ -73,19 +73,19 @@ def max(  # noqa: A001
 ) -> Array:
     """Maximum of ``x`` along ``axis``."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.max(x, axis, keepdims)
 
 
 def any(x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:  # noqa: A001
     """Return True if any element of ``x`` is truthy."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.any(x, axis, keepdims)
 
 
 def all(x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:  # noqa: A001
     """Return True if all elements of ``x`` are truthy."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.all(x, axis, keepdims)

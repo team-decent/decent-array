@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from decent_array._errors import no_backend_error
 from decent_array.interoperability._backend_manager import register_backend_listener
 
 if TYPE_CHECKING:
@@ -22,7 +23,6 @@ if TYPE_CHECKING:
     from decent_array.interoperability._abstracts import Backend
 
 _BACKEND_INSTANCE: Backend | None = None
-_error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
 
 
 def _update_backend(backend: Backend | None) -> None:
@@ -36,33 +36,33 @@ register_backend_listener(_update_backend)
 def zeros(shape: int | tuple[int, ...]) -> Array:
     """Create an array of zeros with the given shape."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.zeros(shape)
 
 
 def zeros_like(x: Array) -> Array:
     """Create an array of zeros matching the shape and type of ``x``."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.zeros_like(x)
 
 
 def ones(shape: int | tuple[int, ...]) -> Array:
     """Create an array of ones with the given shape."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.ones(shape)
 
 
 def ones_like(x: Array) -> Array:
     """Create an array of ones matching the shape and type of ``x``."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.ones_like(x)
 
 
 def eye(n: int) -> Array:
     """Create an ``n x n`` identity matrix."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.eye(n)

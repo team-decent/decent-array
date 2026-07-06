@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from decent_array._errors import no_backend_error
 from decent_array.interoperability._backend_manager import register_backend_listener
 
 if TYPE_CHECKING:
@@ -22,7 +23,6 @@ if TYPE_CHECKING:
     from decent_array.interoperability._abstracts import Backend
 
 _BACKEND_INSTANCE: Backend | None = None
-_error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
 
 
 def _update_backend(backend: Backend | None) -> None:
@@ -36,7 +36,7 @@ register_backend_listener(_update_backend)
 def vecdot(x1: Array, x2: Array) -> Array:
     """Vector dot product of two arrays."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.vecdot(x1, x2)
 
 
@@ -47,14 +47,14 @@ def dot(x1: Array, x2: Array) -> Array:
     Alias for :func:`vecdot`.
     """
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.vecdot(x1, x2)
 
 
 def matmul(x1: Array, x2: Array) -> Array:
     """Matrix multiplication of two arrays."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.matmul(x1, x2)
 
 
@@ -66,7 +66,7 @@ def vector_norm(
 ) -> Array:
     """Vector norm of ``x``."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.vector_norm(x, axis, keepdims, ord)
 
 
@@ -82,5 +82,5 @@ def norm(
     Alias for :func:`vector_norm`.
     """
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.vector_norm(x, axis, keepdims, ord)

@@ -15,6 +15,7 @@ import torch
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._errors import MatrixTransposeError, NDimError, UnsupportedDTypeCreationError, stack_empty_error
 from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
@@ -104,7 +105,7 @@ class PyTorchBackend(Backend):
 
     def stack(self, arrays: Sequence[Array], axis: int = 0) -> Array:
         if len(arrays) == 0:
-            raise ValueError("Cannot stack an empty sequence of arrays.")
+            raise stack_empty_error
         return Array(torch.stack([a.value for a in arrays], dim=axis))
 
     def reshape(self, x: Array, shape: tuple[int, ...]) -> Array:
@@ -116,10 +117,9 @@ class PyTorchBackend(Backend):
         return Array(torch.permute(v, dims=dims))
 
     def matrix_transpose(self, x: Array) -> Array:
-        v = x.value
-        if v.ndim < 2:
-            raise ValueError(f"matrix_transpose requires an array with at least 2 dimensions, got {v.ndim}-D")
-        return Array(v.mT)
+        if x.ndim < 2:
+            raise MatrixTransposeError(x.ndim)
+        return Array(x.value.mT)
 
     def shape(self, x: Array) -> tuple[int, ...]:
         return tuple(x.value.shape)
@@ -140,18 +140,18 @@ class PyTorchBackend(Backend):
         return Array(torch.unsqueeze(x.value, dim=axis))
 
     def diag(self, x: Array) -> Array:
-        if x.value.ndim != 1:
-            raise ValueError(f"diag requires a 1-D array, got {x.value.ndim}-D")
+        if x.ndim != 1:
+            raise NDimError(1, x.ndim)
         return Array(torch.diag(x.value))
 
     def diagonal(self, x: Array, offset: int = 0) -> Array:
-        if x.value.ndim != 2:
-            raise ValueError(f"diagonal requires a 2-D array, got {x.value.ndim}-D")
+        if x.ndim != 2:
+            raise NDimError(2, x.ndim)
         return Array(torch.diagonal(x.value, offset=offset))
 
     def astype(self, x: Array, dtype: dtype) -> Array:
         if not dtype.available:
-            raise ValueError(f"Unsupported dtype '{dtype}' for PyTorch backend.")
+            raise UnsupportedDTypeCreationError(dtype, self.name, self.device.value)
         return Array(x.value.to(dtype=dtype.backend_dtype))
 
     # Linalg

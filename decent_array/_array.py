@@ -451,5 +451,6 @@ class Array:
 
         Raises:
             TypeError: if ``x`` is not 0-dimensional.
-        """  # noqa: DOC502
+
+        """
         return self._backend.to_scalar(self)

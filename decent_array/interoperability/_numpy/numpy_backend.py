@@ -15,7 +15,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from decent_array import Array
-from decent_array._utils import unwrap
+from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
@@ -79,6 +79,18 @@ class NumpyBackend(Backend):
 
     def asarray(self, x: bool | int | float | complex) -> Array:
         return Array(np.array(x))
+
+    def to_scalar(self, x: Array) -> Any:  # noqa: ANN401
+        """
+        Convert a 0-dim array to a scalar.
+
+        Raises:
+            TypeError: if ``x`` is not 0-dimensional.
+
+        """  # noqa: DOC501, DOC502
+        if not is_scalar(x):
+            raise TypeError("Only 0-dim arrays can be converted to Python scalars.")
+        return x.value.item()
 
     def stack(self, arrays: Sequence[Array], axis: int = 0) -> Array:
         if len(arrays) == 0:

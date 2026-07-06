@@ -12,3 +12,8 @@ def unwrap(x: Any) -> Any:  # noqa: ANN401
     site without runtime benefit.
     """
     return x.value if type(x) is Array else x
+
+
+def is_scalar(x: Array) -> bool:
+    """Return True if ``x`` is a 0-dim Array."""
+    return x.ndim == 0

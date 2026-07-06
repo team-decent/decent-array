@@ -432,9 +432,32 @@ def test_len(backend: tuple) -> None:
     assert len(a) == 4
 
 
-def test_float_coercion(backend: tuple) -> None:
-    a = _create_array([2.5])
+def test_float_coercion_float(backend: tuple) -> None:
+    a = _create_array(2.5)
     assert float(a) == pytest.approx(2.5)
+
+
+def test_float_coercion_bool(backend: tuple) -> None:
+    a = _create_array(1)
+    assert bool(a) == True
+
+    a = _create_array(0)
+    assert bool(a) == False
+
+
+def test_float_coercion_int(backend: tuple) -> None:
+    a = _create_array(10)
+    assert int(a) == 10
+
+
+def test_float_coercion_index(backend: tuple) -> None:
+    a = _create_array(10)
+    assert int(a) == 10
+
+
+def test_float_coercion_complex(backend: tuple) -> None:
+    a = iop.from_numpy(np.array(1 + 2 * 1j, dtype=np.complex64))
+    assert complex(a) == 1 + 2 * 1j
 
 
 def test_repr(backend: tuple) -> None:
@@ -529,3 +552,18 @@ def test_device_property(backend: tuple) -> None:
     _framework, device = backend
     a = iop.zeros((3,))
     assert a.device == device
+
+
+def test_item_0_dim(backend: tuple) -> None:
+    a = _create_array(1.0)
+    assert a.item() == 1.0
+
+
+def test_item_n_dim(backend: tuple) -> None:
+    a = _create_array([1.0])
+    with pytest.raises(TypeError, match=r"Only 0-dim arrays"):
+            _ = a.item()
+
+    a = _create_array([1.0, 2.0])
+    with pytest.raises(TypeError, match=r"Only 0-dim arrays"):
+            _ = a.item()

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from copy import deepcopy
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -146,27 +146,47 @@ class NumpyBackend(Backend):
         keepdims: bool = False,
         ord: int | float = 2,  # noqa: A002
     ) -> Array:
-        return Array(np.linalg.norm(x.value, ord=ord, axis=axis, keepdims=keepdims))
+        # axis in np.linalg.vector_norm seems to allow for int | tuple[int, ...] | None at runtime,
+        # but is still typed as int | tuple[int, int] | None, hence the ignore
+        return Array(np.linalg.vector_norm(x.value, ord=ord, axis=axis, keepdims=keepdims))  # type: ignore[arg-type]
 
     # Math reductions
 
     def sum(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(np.sum(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.sum(v, axis=axis, keepdims=True))
+        return Array(np.sum(v, axis=axis))
 
     def mean(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(np.mean(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.mean(v, axis=axis, keepdims=True))
+        return Array(np.mean(v, axis=axis))
 
     def min(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(np.min(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.min(v, axis=axis, keepdims=True))
+        return Array(np.min(v, axis=axis))
 
     def max(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(np.max(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.max(v, axis=axis, keepdims=True))
+        return Array(np.max(v, axis=axis))
 
     def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(np.any(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return bool(np.any(v, axis=axis, keepdims=True))
+        return bool(np.any(v, axis=axis))
 
     def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(np.all(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return bool(np.all(v, axis=axis, keepdims=True))
+        return bool(np.all(v, axis=axis))
 
     # Math elementwise — operands may be Array or scalar (operator dunders pass either).
     # ``Array | float`` covers both: PEP 484's numeric tower implicitly admits ``int``.
@@ -298,10 +318,16 @@ class NumpyBackend(Backend):
         return Array(np.maximum(unwrap(x1), unwrap(x2)))
 
     def argmax(self, x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
-        return Array(np.argmax(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.argmax(v, axis=axis, keepdims=True))
+        return Array(np.argmax(v, axis=axis))
 
     def argmin(self, x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
-        return Array(np.argmin(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.argmin(v, axis=axis, keepdims=True))
+        return Array(np.argmin(v, axis=axis))
 
     def set_item(self, x: Array, key: ArrayKey, value: bool | int | float | complex | Array) -> None:
         x.value[key] = unwrap(value)

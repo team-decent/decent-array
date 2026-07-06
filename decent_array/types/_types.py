@@ -5,9 +5,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING, SupportsIndex, TypeAlias, Union
 
+import numpy
+
 if TYPE_CHECKING:
     import jax
-    import numpy
     import tensorflow as tf
     import torch
 
@@ -20,10 +21,9 @@ Type alias for array-like types supported in decent-array, including NumPy array
 PyTorch tensors, TensorFlow tensors, and JAX arrays.
 """
 
-ArrayTypes: TypeAlias = bool | int | float | complex | ArrayLike  # noqa: UP040
+ArrayTypes: TypeAlias = bool | int | float | complex | numpy.generic | ArrayLike  # noqa: UP040
 """
-Type alias for supported types for optimization variables in decent-array,
-including array-like types and scalars.
+Type alias for supported scalar/array types in decent-array.
 """
 
 ArrayKey: TypeAlias = (  # noqa: UP040

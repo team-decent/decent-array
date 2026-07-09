@@ -220,6 +220,7 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ✓
      - ✓
      - ✓
+     - ✓
      - 
    * - ``bfloat16``
      - ✗

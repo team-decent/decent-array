@@ -18,6 +18,7 @@ from decent_array import Array
 from decent_array._errors import (
     MatrixTransposeError,
     NDimError,
+    NotScalarError,
     UnsupportedDeviceError,
     UnsupportedDTypeCreationError,
     stack_empty_error,
@@ -96,7 +97,7 @@ class NumpyBackend(Backend):
 
         """
         if not is_scalar(x):
-            raise TypeError("Only 0-dim arrays can be converted to Python scalars.")
+            raise NotScalarError(x.ndim)
         return x.value.item()
 
     def stack(self, arrays: Sequence[Array], axis: int = 0) -> Array:

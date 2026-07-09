@@ -12,6 +12,7 @@ from copy import deepcopy
 from typing import Any
 
 import cupy as cp
+import numpy as np
 from numpy.typing import NDArray
 
 from decent_array import Array
@@ -435,22 +436,22 @@ class CupyBackend(Backend):
     @property
     def e(self) -> Any:  # noqa: ANN401
         """e = 2.71828..."""  # noqa: D403
-        return cp.e
+        return np.e
 
     @property
     def inf(self) -> Any:  # noqa: ANN401
         """Infinity."""
-        return cp.inf
+        return np.inf
 
     @property
     def nan(self) -> Any:  # noqa: ANN401
         """Not-a-number."""
-        return cp.nan
+        return np.nan
 
     @property
     def pi(self) -> Any:  # noqa: ANN401
         """pi = 3.14159..."""  # noqa: D403
-        return cp.pi
+        return np.pi
 
 
 register_backend(Frameworks.CUPY, CupyBackend)

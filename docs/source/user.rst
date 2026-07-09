@@ -181,6 +181,7 @@ reliable way is to try operations that involve the dtype and observe if the fram
      -
      -
      -
+     -
    * - ``uint8``
      - ✓
      - ✓
@@ -210,6 +211,7 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ✓
      - JAX requires ``jax_enable_x64=True``; PyTorch support is limited/experimental
    * - **Floating point**
+     -
      -
      -
      -
@@ -256,6 +258,7 @@ reliable way is to try operations that involve the dtype and observe if the fram
      -
      -
      -
+     -
    * - ``complex64``
      - ✓
      - ✓
@@ -278,6 +281,7 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ✗
      - NumPy support is platform-dependent
    * - **Quantized**
+     -
      -
      -
      -
@@ -319,6 +323,7 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ✗
      - 
    * - **Miscellaneous**
+     -
      -
      -
      -

@@ -39,7 +39,7 @@ jax-gpu = [
 ]
 
 [dependency-groups]
-lint = ["ruff==0.15.20"]
+lint = ["ruff==0.15.22"]
 typecheck = [
   "mypy==2.1.0",
   "types-tensorflow>=2.18,<3",

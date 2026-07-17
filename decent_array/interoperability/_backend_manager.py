@@ -4,13 +4,15 @@ import importlib
 from collections.abc import Callable
 from contextvars import ContextVar
 
-from decent_array.types import SupportedDevices, SupportedFrameworks
+import decent_array._constants as constants
+import decent_array.types._dtypes as dtypes
+from decent_array.types._types import Devices, Frameworks
 
 from ._abstracts import Backend
 
-_BACKEND_REGISTRY: dict[SupportedFrameworks, type[Backend]] = {}
-_BACKEND_INSTANCES: dict[SupportedFrameworks, Backend] = {}
-_ACTIVE_BACKEND: ContextVar[SupportedFrameworks | None] = ContextVar(
+_BACKEND_REGISTRY: dict[Frameworks, type[Backend]] = {}
+_BACKEND_INSTANCES: dict[Frameworks, Backend] = {}
+_ACTIVE_BACKEND: ContextVar[Frameworks | None] = ContextVar(
     "decent_array.interoperability.active_backend", default=None
 )
 _BACKEND_LISTENERS: list[Callable[[Backend | None], None]] = []
@@ -18,8 +20,8 @@ _BACKEND_INSTANCE: Backend | None = None
 
 
 def set_backend(
-    backend: SupportedFrameworks | str,
-    device: SupportedDevices | str = SupportedDevices.CPU,
+    backend: Frameworks | str,
+    device: Devices | str = Devices.CPU,
 ) -> None:
     """
     Set the active backend (and target device) for the current execution context.
@@ -33,9 +35,9 @@ def set_backend(
     Backend modules are auto-imported on demand.
 
     Args:
-        backend: A :class:`~decent_array.types.SupportedFrameworks` value, its canonical string (e.g.
+        backend: A :class:`~decent_array.types.Frameworks` value, its canonical string (e.g.
             ``"numpy"``, ``"pytorch"``).
-        device: Target accelerator. Accepts a :class:`~decent_array.types.SupportedDevices` value or its
+        device: Target accelerator. Accepts a :class:`~decent_array.types.Devices` value or its
             string equivalent (``"cpu"``, ``"gpu"``, ``"mps"``). Defaults to CPU. The
             backend's array-creation methods produce arrays on this device by default.
 
@@ -44,9 +46,9 @@ def set_backend(
             is already active in this context.
         ImportError: If the backend module cannot be imported (e.g. due to a missing optional dependency).
 
-    """  # noqa: DOC502
+    """
     requested = _normalize(backend)
-    requested_device = device if isinstance(device, SupportedDevices) else SupportedDevices(device)
+    requested_device = device if isinstance(device, Devices) else Devices(device)
 
     current = _ACTIVE_BACKEND.get()
     if current is not None and current != requested:
@@ -69,6 +71,9 @@ def set_backend(
         for listener in _BACKEND_LISTENERS:
             listener(_BACKEND_INSTANCE)
 
+    _bind_dtypes(_BACKEND_INSTANCE)
+    _bind_constants(_BACKEND_INSTANCE)
+
 
 def register_backend_listener(listener: Callable[[Backend | None], None]) -> None:
     """
@@ -87,11 +92,11 @@ def register_backend_listener(listener: Callable[[Backend | None], None]) -> Non
 
 
 def register_backend(
-    backend: SupportedFrameworks,
+    backend: Frameworks,
     cls: type[Backend],
 ) -> None:
     """
-    Register a backend class under a :class:`SupportedFrameworks` value.
+    Register a backend class under a :class:`Frameworks` value.
 
     Called once per backend module *after* the class definition.
     Backends are instantiated lazily on first use. Re-registering replaces the
@@ -127,7 +132,7 @@ def reset_backends() -> None:
         listener(None)
 
 
-def default_device() -> SupportedDevices:
+def default_device() -> Devices:
     """
     Return the default device for the active backend.
 
@@ -143,24 +148,24 @@ def default_device() -> SupportedDevices:
     return backend.device
 
 
-def _normalize(backend: SupportedFrameworks | str) -> SupportedFrameworks:
+def _normalize(backend: Frameworks | str) -> Frameworks:
     """
-    Convert a backend identifier to its canonical :class:`SupportedFrameworks` value.
+    Convert a backend identifier to its canonical :class:`Frameworks` value.
 
     Raises:
         KeyError: If the input is not a valid backend identifier.
 
     """
-    if isinstance(backend, SupportedFrameworks):
+    if isinstance(backend, Frameworks):
         return backend
     try:
-        return SupportedFrameworks(backend)
+        return Frameworks(backend)
     except ValueError as exc:
-        valid = ", ".join(f.value for f in SupportedFrameworks)
+        valid = ", ".join(f.value for f in Frameworks)
         raise KeyError(f"Unknown backend '{backend}'. Valid backends: {valid}.") from exc
 
 
-def _instantiate(backend: SupportedFrameworks, device: SupportedDevices) -> Backend:
+def _instantiate(backend: Frameworks, device: Devices) -> Backend:
     """
     Get or create a backend instance for the given backend and device.
 
@@ -185,7 +190,7 @@ def _instantiate(backend: SupportedFrameworks, device: SupportedDevices) -> Back
     return instance
 
 
-def _auto_import(backend: SupportedFrameworks) -> None:
+def _auto_import(backend: Frameworks) -> None:
     """
     Import the backend's package so its registration side-effect runs.
 
@@ -202,3 +207,25 @@ def _auto_import(backend: SupportedFrameworks) -> None:
             f"Failed to import the backend module for '{backend.value}'. Ensure the "
             "corresponding backend package is installed and importable."
         ) from exc
+
+
+def _bind_dtypes(backend: Backend | None) -> None:
+    """Bind dtype objects to the corresponding backend dtypes (if available)."""
+    if backend is None:
+        return
+    for name in dtypes._SUPPORTED:  # noqa: SLF001
+        dt = getattr(dtypes, name)
+        backend_dt = getattr(backend, name, None)
+        dt._available = backend_dt is not None  # noqa: SLF001
+        dt._backend_dtype = backend_dt  # noqa: SLF001
+
+
+def _bind_constants(backend: Backend | None) -> None:
+    """Bind constants to the corresponding backend constants."""
+    if backend is None:
+        return
+    for name in constants._CONSTANTS:  # noqa: SLF001
+        backend_c = getattr(backend, name, None)
+        if backend_c is None:
+            return
+        setattr(constants, name, backend_c)

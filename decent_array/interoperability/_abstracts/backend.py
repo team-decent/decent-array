@@ -18,25 +18,27 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
-from decent_array.types import SupportedDevices
+from decent_array.types._types import Devices
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from decent_array import Array
-    from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes
+    from decent_array.types import ArrayKey, ArrayTypes
+    from decent_array.types._dtypes import dtype
 
 
-class Backend(ABC):  # noqa: PLR0904
+class Backend(ABC):
     """
     Abstract base class for a backend.
 
-    Concrete backends are bound to a single :class:`SupportedDevices` at construction
+    Concrete backends are bound to a single :class:`Devices` at construction
     time; that device is the default for all new arrays produced by this backend.
     """
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
-        self.device: SupportedDevices = device
+    def __init__(self, device: Devices = Devices.CPU, name: str = "") -> None:
+        self.device: Devices = device
+        self.name: str = name
 
     # Array creation ------------------------------------------------------
 
@@ -61,12 +63,12 @@ class Backend(ABC):  # noqa: PLR0904
         """Create an ``n x n`` identity matrix."""
 
     @abstractmethod
-    def device_to_native(self, device: SupportedDevices) -> Any:  # noqa: ANN401
-        """Convert :class:`SupportedDevices` to the backend's native device representation."""
+    def device_to_native(self, device: Devices) -> Any:  # noqa: ANN401
+        """Convert :class:`Devices` to the backend's native device representation."""
 
     @abstractmethod
-    def device_of(self, x: Array) -> SupportedDevices:
-        """Return the :class:`SupportedDevices` of the given array."""
+    def device_of(self, x: Array) -> Devices:
+        """Return the :class:`Devices` of the given array."""
 
     # Array manipulation --------------------------------------------------
 
@@ -75,7 +77,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Return a copy of ``x``."""
 
     @abstractmethod
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         """Convert ``x`` to a NumPy array on the CPU."""
 
     @abstractmethod
@@ -135,7 +137,7 @@ class Backend(ABC):  # noqa: PLR0904
         """Extract the diagonal entries from a 2-D matrix at the given ``offset``."""
 
     @abstractmethod
-    def astype(self, x: Array, dtype: DTypes) -> Array:
+    def astype(self, x: Array, dtype: dtype) -> Array:
         """Cast ``x`` to a different dtype."""
 
     # Linalg --------------------------------------------------------------
@@ -393,3 +395,157 @@ class Backend(ABC):  # noqa: PLR0904
     @abstractmethod
     def choice(self, x: Array, size: int, replace: bool = True) -> Array:
         """Sample ``size`` elements from ``x``."""
+
+    # DTYPES --------------------------------------------------------------
+
+    @property
+    @abstractmethod
+    def bool_(self) -> Any:  # noqa: ANN401
+        """Bool dtype."""
+
+    @property
+    @abstractmethod
+    def uint8(self) -> Any:  # noqa: ANN401
+        """Unsigned 8-bit integer dtype."""
+
+    @property
+    def uint16(self) -> Any | None:  # noqa: ANN401
+        """Unsigned 16-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def uint32(self) -> Any | None:  # noqa: ANN401
+        """Unsigned 32-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def uint64(self) -> Any | None:  # noqa: ANN401
+        """Unsigned 64-bit integer dtype (optional)."""
+        return None
+
+    @property
+    @abstractmethod
+    def int8(self) -> Any:  # noqa: ANN401
+        """Signed 8-bit integer dtype."""
+
+    @property
+    @abstractmethod
+    def int16(self) -> Any:  # noqa: ANN401
+        """Signed 16-bit integer dtype."""
+
+    @property
+    @abstractmethod
+    def int32(self) -> Any:  # noqa: ANN401
+        """Signed 32-bit integer dtype."""
+
+    @property
+    def int64(self) -> Any:  # noqa: ANN401
+        """Signed 64-bit integer dtype."""
+        return None
+
+    @property
+    @abstractmethod
+    def float16(self) -> Any:  # noqa: ANN401
+        """16-bit floating-point dtype."""
+
+    @property
+    @abstractmethod
+    def float32(self) -> Any:  # noqa: ANN401
+        """32-bit floating-point dtype."""
+
+    @property
+    def float64(self) -> Any:  # noqa: ANN401
+        """64-bit floating-point dtype."""
+        return None
+
+    @property
+    def complex64(self) -> Any:  # noqa: ANN401
+        """64-bit complex dtype."""
+        return None
+
+    @property
+    def complex128(self) -> Any:  # noqa: ANN401
+        """128-bit complex dtype."""
+        return None
+
+    @property
+    def float128(self) -> Any | None:  # noqa: ANN401
+        """128-bit floating-point dtype (optional)."""
+        return None
+
+    @property
+    def complex256(self) -> Any | None:  # noqa: ANN401
+        """256-bit complex dtype (optional)."""
+        return None
+
+    @property
+    def qint8(self) -> Any | None:  # noqa: ANN401
+        """Quantized 8-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def qint16(self) -> Any | None:  # noqa: ANN401
+        """Quantized 16-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def qint32(self) -> Any | None:  # noqa: ANN401
+        """Quantized 32-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def quint8(self) -> Any | None:  # noqa: ANN401
+        """Quantized unsigned 8-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def quint16(self) -> Any | None:  # noqa: ANN401
+        """Quantized unsigned 16-bit integer dtype (optional)."""
+        return None
+
+    @property
+    def bfloat16(self) -> Any | None:  # noqa: ANN401
+        """Brain floating point 16-bit dtype (optional)."""
+        return None
+
+    @property
+    def unicode_(self) -> Any | None:  # noqa: ANN401
+        """Unicode string dtype (optional)."""
+        return None
+
+    @property
+    def bytes_(self) -> Any | None:  # noqa: ANN401
+        """Byte string dtype (optional)."""
+        return None
+
+    @property
+    def object_(self) -> Any | None:  # noqa: ANN401
+        """Python object dtype (optional)."""
+        return None
+
+    @property
+    def void(self) -> Any | None:  # noqa: ANN401
+        """Raw/void dtype (optional)."""
+        return None
+
+    # CONSTANTS -----------------------------------------------------------
+
+    @property
+    @abstractmethod
+    def e(self) -> Any:  # noqa: ANN401
+        """e = 2.71828..."""  # noqa: D403
+
+    @property
+    @abstractmethod
+    def inf(self) -> Any:  # noqa: ANN401
+        """Infinity."""
+
+    @property
+    @abstractmethod
+    def nan(self) -> Any:  # noqa: ANN401
+        """Not-a-number."""
+
+    @property
+    @abstractmethod
+    def pi(self) -> Any:  # noqa: ANN401
+        """pi = 3.14159..."""  # noqa: D403

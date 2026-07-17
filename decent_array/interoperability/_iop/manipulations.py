@@ -23,7 +23,8 @@ if TYPE_CHECKING:
 
     from decent_array import Array
     from decent_array.interoperability._abstracts import Backend
-    from decent_array.types import DTypes, SupportedArrayTypes
+    from decent_array.types import ArrayTypes
+    from decent_array.types._dtypes import dtype
 
 _BACKEND_INSTANCE: Backend | None = None
 _error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
@@ -44,7 +45,7 @@ def copy(x: Array) -> Array:
     return _BACKEND_INSTANCE.copy(x)
 
 
-def to_numpy(x: SupportedArrayTypes | Array) -> NDArray[Any]:
+def to_numpy(x: ArrayTypes | Array) -> NDArray[Any]:
     """Convert ``x`` to a NumPy array on CPU."""
     if _BACKEND_INSTANCE is None:
         raise _error
@@ -156,7 +157,7 @@ def diagonal(x: Array, offset: int = 0) -> Array:
     return _BACKEND_INSTANCE.diagonal(x, offset)
 
 
-def astype(x: Array, dtype: DTypes) -> Array:
+def astype(x: Array, dtype: dtype) -> Array:
     """Cast ``x`` to a different dtype."""
     if _BACKEND_INSTANCE is None:
         raise _error

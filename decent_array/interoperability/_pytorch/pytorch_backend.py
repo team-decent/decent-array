@@ -15,38 +15,18 @@ import torch
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, SupportedFrameworks
+from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
+from decent_array.types._dtypes import dtype
 
 
-def _unwrap(x: Any) -> Any:  # noqa: ANN401
-    """Return the underlying value of an :class:`Array`, or pass ``x`` through."""
-    return x.value if type(x) is Array else x
-
-
-_DTYPE_MAP = {
-    DTypes.BOOL: torch.bool,
-    DTypes.UINT8: torch.uint8,
-    DTypes.UINT16: torch.uint16,
-    DTypes.UINT32: torch.uint32,
-    DTypes.UINT64: torch.uint64,
-    DTypes.INT8: torch.int8,
-    DTypes.INT16: torch.int16,
-    DTypes.INT32: torch.int32,
-    DTypes.INT64: torch.int64,
-    DTypes.FLOAT32: torch.float32,
-    DTypes.FLOAT64: torch.float64,
-    DTypes.COMPLEX64: torch.complex64,
-    DTypes.COMPLEX128: torch.complex128,
-}
-
-
-class PyTorchBackend(Backend):  # noqa: PLR0904
+class PyTorchBackend(Backend):
     """PyTorch implementation of :class:`Backend`."""
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
-        super().__init__(device)
+    def __init__(self, device: Devices = Devices.CPU) -> None:
+        super().__init__(device, name=Frameworks.PYTORCH.value)
         self._native_device: str = self.device_to_native(device)
         self._generator: torch.Generator = torch.Generator(device=self._native_device)
 
@@ -67,23 +47,23 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
     def eye(self, n: int) -> Array:
         return Array(torch.eye(n, device=self._native_device))
 
-    def device_to_native(self, device: SupportedDevices) -> str:
-        if device == SupportedDevices.CPU:
+    def device_to_native(self, device: Devices) -> str:
+        if device == Devices.CPU:
             return "cpu"
-        if device == SupportedDevices.GPU:
+        if device == Devices.GPU:
             return "cuda"
-        if device == SupportedDevices.MPS:
+        if device == Devices.MPS:
             return "mps"
         raise ValueError(f"Unsupported device: {device}")
 
-    def device_of(self, x: Array) -> SupportedDevices:
+    def device_of(self, x: Array) -> Devices:
         kind = x.value.device.type
         if kind == "cpu":
-            return SupportedDevices.CPU
+            return Devices.CPU
         if kind == "cuda":
-            return SupportedDevices.GPU
+            return Devices.GPU
         if kind == "mps":
-            return SupportedDevices.MPS
+            return Devices.MPS
         raise TypeError(f"Unsupported PyTorch device type: {kind}")
 
     # Array manipulation
@@ -91,7 +71,7 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
     def copy(self, x: Array) -> Array:
         return Array(x.value.detach().clone())
 
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         """Return the value of an :class:`Array` as a NumPy array."""
         v = x.value if type(x) is Array else x
         if isinstance(v, torch.Tensor):
@@ -157,10 +137,10 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
             raise ValueError(f"diagonal requires a 2-D array, got {x.value.ndim}-D")
         return Array(torch.diagonal(x.value, offset=offset))
 
-    def astype(self, x: Array, dtype: DTypes) -> Array:
-        if dtype not in _DTYPE_MAP:
-            raise ValueError(f"Unsupported dtype '{dtype.value}' for PyTorch backend.")
-        return Array(x.value.to(dtype=_DTYPE_MAP[dtype]))
+    def astype(self, x: Array, dtype: dtype) -> Array:
+        if not dtype.available:
+            raise ValueError(f"Unsupported dtype '{dtype}' for PyTorch backend.")
+        return Array(x.value.to(dtype=dtype.backend_dtype))
 
     # Linalg
 
@@ -219,52 +199,52 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
     # ``Array | float`` covers both: PEP 484's numeric tower implicitly admits ``int``.
 
     def add(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.add(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.add(unwrap(x1), unwrap(x2)))
 
     def iadd[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.add_(_unwrap(x2))
+        x1.value.add_(unwrap(x2))
         return x1
 
     def subtract(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.sub(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.sub(unwrap(x1), unwrap(x2)))
 
     def isubtract[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.sub_(_unwrap(x2))
+        x1.value.sub_(unwrap(x2))
         return x1
 
     def multiply(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.mul(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.mul(unwrap(x1), unwrap(x2)))
 
     def imultiply[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.mul_(_unwrap(x2))
+        x1.value.mul_(unwrap(x2))
         return x1
 
     def divide(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.div(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.div(unwrap(x1), unwrap(x2)))
 
     def idivide[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.div_(_unwrap(x2))
+        x1.value.div_(unwrap(x2))
         return x1
 
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(torch.floor_divide(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.floor_divide(unwrap(x1), unwrap(x2)))
 
     def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value.floor_divide_(_unwrap(x2))
+        x1.value.floor_divide_(unwrap(x2))
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(torch.remainder(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.remainder(unwrap(x1), unwrap(x2)))
 
     def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value.remainder_(_unwrap(x2))
+        x1.value.remainder_(unwrap(x2))
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.pow(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.pow(unwrap(x1), unwrap(x2)))
 
     def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value.pow_(_unwrap(x2))
+        x1.value.pow_(unwrap(x2))
         return x1
 
     def negative(self, x: Array) -> Array:
@@ -279,61 +259,61 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.eq(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.eq(unwrap(x1), unwrap(x2)))
 
     def not_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.ne(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.ne(unwrap(x1), unwrap(x2)))
 
     def less(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.lt(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.lt(unwrap(x1), unwrap(x2)))
 
     def less_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.le(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.le(unwrap(x1), unwrap(x2)))
 
     def greater(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.gt(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.gt(unwrap(x1), unwrap(x2)))
 
     def greater_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(torch.ge(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.ge(unwrap(x1), unwrap(x2)))
 
     # Bitwise
 
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(torch.bitwise_and(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_and(unwrap(x1), unwrap(x2)))
 
     def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value.bitwise_and_(_unwrap(x2))
+        x1.value.bitwise_and_(unwrap(x2))
         return x1
 
     def bitwise_invert(self, x: Array) -> Array:
         return Array(torch.bitwise_not(x.value))
 
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(torch.bitwise_or(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_or(unwrap(x1), unwrap(x2)))
 
     def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value.bitwise_or_(_unwrap(x2))
+        x1.value.bitwise_or_(unwrap(x2))
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(torch.bitwise_xor(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_xor(unwrap(x1), unwrap(x2)))
 
     def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value.bitwise_xor_(_unwrap(x2))
+        x1.value.bitwise_xor_(unwrap(x2))
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(torch.bitwise_left_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_left_shift(unwrap(x1), unwrap(x2)))
 
     def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value.bitwise_left_shift_(_unwrap(x2))
+        x1.value.bitwise_left_shift_(unwrap(x2))
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(torch.bitwise_right_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(torch.bitwise_right_shift(unwrap(x1), unwrap(x2)))
 
     def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value.bitwise_right_shift_(_unwrap(x2))
+        x1.value.bitwise_right_shift_(unwrap(x2))
         return x1
 
     # Operators
@@ -342,7 +322,7 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
         return Array(torch.sign(x.value))
 
     def maximum(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        a, b = _unwrap(x1), _unwrap(x2)
+        a, b = unwrap(x1), unwrap(x2)
         # torch.maximum requires both operands to be Tensors; lift Python scalars to
         # match the dtype/device of the tensor operand so the contract matches numpy.
         if not isinstance(a, torch.Tensor):
@@ -359,7 +339,7 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
         return Array(torch.argmin(x.value, dim=axis, keepdim=keepdims))
 
     def set_item(self, x: Array, key: ArrayKey, value: bool | int | float | complex | Array) -> None:
-        x.value[key] = _unwrap(value)
+        x.value[key] = unwrap(value)
 
     def get_item(self, x: Array, key: ArrayKey) -> Array:
         return Array(x.value[key])
@@ -422,5 +402,100 @@ class PyTorchBackend(Backend):  # noqa: PLR0904
         indices = weights.multinomial(num_samples=size, replacement=replace, generator=self._generator)
         return Array(v[indices])
 
+    # Dtypes
 
-register_backend(SupportedFrameworks.PYTORCH, PyTorchBackend)
+    @property
+    def bool_(self) -> torch.dtype:
+        return torch.bool
+
+    @property
+    def uint8(self) -> torch.dtype:
+        return torch.uint8
+
+    @property
+    def int8(self) -> torch.dtype:
+        return torch.int8
+
+    @property
+    def int16(self) -> torch.dtype:
+        return torch.int16
+
+    @property
+    def int32(self) -> torch.dtype:
+        return torch.int32
+
+    @property
+    def int64(self) -> torch.dtype:
+        return torch.int64
+
+    @property
+    def float16(self) -> torch.dtype:
+        return torch.float16
+
+    @property
+    def float32(self) -> torch.dtype:
+        return torch.float32
+
+    @property
+    def float64(self) -> Any:  # noqa: ANN401
+        if self.device == Devices.MPS:
+            return None
+        return torch.float64
+
+    @property
+    def complex64(self) -> torch.dtype:
+        return torch.complex64
+
+    @property
+    def complex128(self) -> torch.dtype:
+        return torch.complex128
+
+    @property
+    def qint8(self) -> Any:  # noqa: ANN401
+        return torch.qint8
+
+    @property
+    def qint32(self) -> Any:  # noqa: ANN401
+        return torch.qint32
+
+    @property
+    def quint8(self) -> Any:  # noqa: ANN401
+        return torch.quint8
+
+    @property
+    def bfloat16(self) -> Any:  # noqa: ANN401
+        if self.device == Devices.GPU:
+            return torch.bfloat16 if torch.cuda.is_bf16_supported() else None
+        if self.device == Devices.MPS:
+            return None
+        capabilities = torch.cpu.get_capabilities()
+        return (
+            torch.bfloat16
+            if any(tag in capabilities for tag in ("bf16", "avx512_bf16", "amx_bf16", "sve_bf16"))
+            else None
+        )
+
+    # Constants
+
+    @property
+    def e(self) -> Any:  # noqa: ANN401
+        """e = 2.71828..."""  # noqa: D403
+        return torch.e
+
+    @property
+    def inf(self) -> Any:  # noqa: ANN401
+        """Infinity."""
+        return torch.inf
+
+    @property
+    def nan(self) -> Any:  # noqa: ANN401
+        """Not-a-number."""
+        return torch.nan
+
+    @property
+    def pi(self) -> Any:  # noqa: ANN401
+        """pi = 3.14159..."""  # noqa: D403
+        return torch.pi
+
+
+register_backend(Frameworks.PYTORCH, PyTorchBackend)

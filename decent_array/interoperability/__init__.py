@@ -21,7 +21,7 @@ from ._iop.bit_operators import (
     bitwise_right_shift,
     bitwise_xor,
 )
-from ._iop.comparasion import equal, greater, greater_equal, less, less_equal, not_equal
+from ._iop.comparison import equal, greater, greater_equal, less, less_equal, not_equal
 from ._iop.creation import eye, ones, ones_like, zeros, zeros_like
 from ._iop.linalg import dot, matmul, norm, vecdot, vector_norm
 from ._iop.manipulations import (

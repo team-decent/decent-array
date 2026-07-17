@@ -9,52 +9,26 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from copy import deepcopy
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, SupportedFrameworks
+from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
+from decent_array.types._dtypes import dtype
 
 
-def _unwrap(x: Any) -> Any:  # noqa: ANN401
-    """
-    Return the underlying value of an :class:`Array`, or pass ``x`` through.
-
-    Typed as ``Any`` because operator dunders may pass either an :class:`Array` or a
-    Python scalar; the strict abstract signature would force a ``cast`` at every call
-    site without runtime benefit.
-    """
-    return x.value if type(x) is Array else x
-
-
-_DTYPE_MAP = {
-    DTypes.BOOL: np.bool_,
-    DTypes.UINT8: np.uint8,
-    DTypes.UINT16: np.uint16,
-    DTypes.UINT32: np.uint32,
-    DTypes.UINT64: np.uint64,
-    DTypes.INT8: np.int8,
-    DTypes.INT16: np.int16,
-    DTypes.INT32: np.int32,
-    DTypes.INT64: np.int64,
-    DTypes.FLOAT32: np.float32,
-    DTypes.FLOAT64: np.float64,
-    DTypes.COMPLEX64: np.complex64,
-    DTypes.COMPLEX128: np.complex128,
-}
-
-
-class NumpyBackend(Backend):  # noqa: PLR0904
+class NumpyBackend(Backend):
     """NumPy implementation of :class:`Backend`."""
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
-        if device != SupportedDevices.CPU:
+    def __init__(self, device: Devices = Devices.CPU) -> None:
+        if device != Devices.CPU:
             raise ValueError(f"NumPy backend only supports CPU, got '{device.value}'.")
-        super().__init__(device)
+        super().__init__(device, name=Frameworks.NUMPY.value)
         self._rng: np.random.Generator = np.random.default_rng()
 
     # Array creation
@@ -74,12 +48,12 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     def eye(self, n: int) -> Array:
         return Array(np.eye(n))
 
-    def device_to_native(self, device: SupportedDevices) -> Any:  # noqa: ANN401
+    def device_to_native(self, device: Devices) -> Any:  # noqa: ANN401
         # NumPy has no explicit device management; surface the request unchanged.
         return device
 
-    def device_of(self, x: Array) -> SupportedDevices:  # noqa: ARG002
-        return SupportedDevices.CPU
+    def device_of(self, x: Array) -> Devices:  # noqa: ARG002
+        return Devices.CPU
 
     # Array manipulation
 
@@ -89,7 +63,7 @@ class NumpyBackend(Backend):  # noqa: PLR0904
             return Array(np.copy(v))
         return Array(deepcopy(v))
 
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         """Return the value of an :class:`Array` as a NumPy array."""
         v = x.value if type(x) is Array else x
         if isinstance(v, np.ndarray):
@@ -148,10 +122,10 @@ class NumpyBackend(Backend):  # noqa: PLR0904
             raise ValueError(f"diagonal requires a 2-D array, got {x.value.ndim}-D")
         return Array(np.diagonal(x.value, offset=offset))
 
-    def astype(self, x: Array, dtype: DTypes) -> Array:
-        if dtype not in _DTYPE_MAP:
-            raise ValueError(f"Unsupported dtype '{dtype.value}' for NumPy backend.")
-        return Array(np.asarray(x.value, dtype=_DTYPE_MAP[dtype]))
+    def astype(self, x: Array, dtype: dtype) -> Array:
+        if not dtype.available:
+            raise ValueError(f"Unsupported dtype '{dtype}' for NumPy backend.")
+        return Array(np.asarray(x.value, dtype=dtype.backend_dtype))
 
     # Linalg
 
@@ -172,78 +146,98 @@ class NumpyBackend(Backend):  # noqa: PLR0904
         keepdims: bool = False,
         ord: int | float = 2,  # noqa: A002
     ) -> Array:
-        return Array(np.linalg.norm(x.value, ord=ord, axis=axis, keepdims=keepdims))
+        # axis in np.linalg.vector_norm seems to allow for int | tuple[int, ...] | None at runtime,
+        # but is still typed as int | tuple[int, int] | None, hence the ignore
+        return Array(np.linalg.vector_norm(x.value, ord=ord, axis=axis, keepdims=keepdims))  # type: ignore[arg-type]
 
     # Math reductions
 
     def sum(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(np.sum(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.sum(v, axis=axis, keepdims=True))
+        return Array(np.sum(v, axis=axis))
 
     def mean(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(np.mean(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.mean(v, axis=axis, keepdims=True))
+        return Array(np.mean(v, axis=axis))
 
     def min(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(np.min(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.min(v, axis=axis, keepdims=True))
+        return Array(np.min(v, axis=axis))
 
     def max(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(np.max(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.max(v, axis=axis, keepdims=True))
+        return Array(np.max(v, axis=axis))
 
     def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(np.any(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return bool(np.any(v, axis=axis, keepdims=True))
+        return bool(np.any(v, axis=axis))
 
     def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(np.all(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return bool(np.all(v, axis=axis, keepdims=True))
+        return bool(np.all(v, axis=axis))
 
     # Math elementwise — operands may be Array or scalar (operator dunders pass either).
     # ``Array | float`` covers both: PEP 484's numeric tower implicitly admits ``int``.
 
     def add(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.add(_unwrap(x1), _unwrap(x2)))
+        return Array(np.add(unwrap(x1), unwrap(x2)))
 
     def iadd[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value += _unwrap(x2)
+        x1.value += unwrap(x2)
         return x1
 
     def subtract(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.subtract(_unwrap(x1), _unwrap(x2)))
+        return Array(np.subtract(unwrap(x1), unwrap(x2)))
 
     def isubtract[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value -= _unwrap(x2)
+        x1.value -= unwrap(x2)
         return x1
 
     def multiply(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.multiply(_unwrap(x1), _unwrap(x2)))
+        return Array(np.multiply(unwrap(x1), unwrap(x2)))
 
     def imultiply[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value *= _unwrap(x2)
+        x1.value *= unwrap(x2)
         return x1
 
     def divide(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.divide(_unwrap(x1), _unwrap(x2)))
+        return Array(np.divide(unwrap(x1), unwrap(x2)))
 
     def idivide[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value /= _unwrap(x2)
+        x1.value /= unwrap(x2)
         return x1
 
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(np.floor_divide(_unwrap(x1), _unwrap(x2)))
+        return Array(np.floor_divide(unwrap(x1), unwrap(x2)))
 
     def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value //= _unwrap(x2)
+        x1.value //= unwrap(x2)
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(np.remainder(_unwrap(x1), _unwrap(x2)))
+        return Array(np.remainder(unwrap(x1), unwrap(x2)))
 
     def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value %= _unwrap(x2)
+        x1.value %= unwrap(x2)
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.power(_unwrap(x1), _unwrap(x2)))
+        return Array(np.power(unwrap(x1), unwrap(x2)))
 
     def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value **= _unwrap(x2)
+        x1.value **= unwrap(x2)
         return x1
 
     def negative(self, x: Array) -> Array:
@@ -258,61 +252,61 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.equal(_unwrap(x1), _unwrap(x2)))
+        return Array(np.equal(unwrap(x1), unwrap(x2)))
 
     def not_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.not_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(np.not_equal(unwrap(x1), unwrap(x2)))
 
     def less(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.less(_unwrap(x1), _unwrap(x2)))
+        return Array(np.less(unwrap(x1), unwrap(x2)))
 
     def less_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.less_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(np.less_equal(unwrap(x1), unwrap(x2)))
 
     def greater(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.greater(_unwrap(x1), _unwrap(x2)))
+        return Array(np.greater(unwrap(x1), unwrap(x2)))
 
     def greater_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.greater_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(np.greater_equal(unwrap(x1), unwrap(x2)))
 
     # Bitwise
 
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(np.bitwise_and(_unwrap(x1), _unwrap(x2)))
+        return Array(np.bitwise_and(unwrap(x1), unwrap(x2)))
 
     def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value &= _unwrap(x2)
+        x1.value &= unwrap(x2)
         return x1
 
     def bitwise_invert(self, x: Array) -> Array:
         return Array(np.bitwise_not(x.value))
 
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(np.bitwise_or(_unwrap(x1), _unwrap(x2)))
+        return Array(np.bitwise_or(unwrap(x1), unwrap(x2)))
 
     def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value |= _unwrap(x2)
+        x1.value |= unwrap(x2)
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(np.bitwise_xor(_unwrap(x1), _unwrap(x2)))
+        return Array(np.bitwise_xor(unwrap(x1), unwrap(x2)))
 
     def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value ^= _unwrap(x2)
+        x1.value ^= unwrap(x2)
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(np.left_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(np.left_shift(unwrap(x1), unwrap(x2)))
 
     def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value <<= _unwrap(x2)
+        x1.value <<= unwrap(x2)
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(np.right_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(np.right_shift(unwrap(x1), unwrap(x2)))
 
     def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value >>= _unwrap(x2)
+        x1.value >>= unwrap(x2)
         return x1
 
     # Operators
@@ -321,16 +315,22 @@ class NumpyBackend(Backend):  # noqa: PLR0904
         return Array(np.sign(x.value))
 
     def maximum(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(np.maximum(_unwrap(x1), _unwrap(x2)))
+        return Array(np.maximum(unwrap(x1), unwrap(x2)))
 
     def argmax(self, x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
-        return Array(np.argmax(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.argmax(v, axis=axis, keepdims=True))
+        return Array(np.argmax(v, axis=axis))
 
     def argmin(self, x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
-        return Array(np.argmin(x.value, axis=axis, keepdims=keepdims))
+        v = cast("np.ndarray[Any, Any]", x.value)
+        if keepdims:
+            return Array(np.argmin(v, axis=axis, keepdims=True))
+        return Array(np.argmin(v, axis=axis))
 
     def set_item(self, x: Array, key: ArrayKey, value: bool | int | float | complex | Array) -> None:
-        x.value[key] = _unwrap(value)
+        x.value[key] = unwrap(value)
 
     def get_item(self, x: Array, key: ArrayKey) -> Array:
         return Array(x.value[key])
@@ -375,5 +375,111 @@ class NumpyBackend(Backend):  # noqa: PLR0904
     def choice(self, x: Array, size: int, replace: bool = True) -> Array:
         return Array(self._rng.choice(x.value, size=size, replace=replace))
 
+    # Dtypes
 
-register_backend(SupportedFrameworks.NUMPY, NumpyBackend)
+    @property
+    def bool_(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.bool_)
+
+    @property
+    def uint8(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.uint8)
+
+    @property
+    def uint16(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.uint16)
+
+    @property
+    def uint32(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.uint32)
+
+    @property
+    def uint64(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.uint64)
+
+    @property
+    def int8(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.int8)
+
+    @property
+    def int16(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.int16)
+
+    @property
+    def int32(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.int32)
+
+    @property
+    def int64(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.int64)
+
+    @property
+    def float16(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.float16)
+
+    @property
+    def float32(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.float32)
+
+    @property
+    def float64(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.float64)
+
+    @property
+    def complex64(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.complex64)
+
+    @property
+    def complex128(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.complex128)
+
+    @property
+    def float128(self) -> Any | None:  # noqa: ANN401
+        float128 = getattr(np, "float128", None)
+        return np.dtype(float128) if float128 is not None else None
+
+    @property
+    def complex256(self) -> Any | None:  # noqa: ANN401
+        complex256 = getattr(np, "complex256", None)
+        return np.dtype(complex256) if complex256 is not None else None
+
+    @property
+    def unicode_(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.str_)
+
+    @property
+    def bytes_(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.bytes_)
+
+    @property
+    def object_(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.object_)
+
+    @property
+    def void(self) -> Any:  # noqa: ANN401
+        return np.dtype(np.void)
+
+    # Constants
+
+    @property
+    def e(self) -> Any:  # noqa: ANN401
+        """e = 2.71828..."""  # noqa: D403
+        return np.e
+
+    @property
+    def inf(self) -> Any:  # noqa: ANN401
+        """Infinity."""
+        return np.inf
+
+    @property
+    def nan(self) -> Any:  # noqa: ANN401
+        """Not-a-number."""
+        return np.nan
+
+    @property
+    def pi(self) -> Any:  # noqa: ANN401
+        """pi = 3.14159..."""  # noqa: D403
+        return np.pi
+
+
+register_backend(Frameworks.NUMPY, NumpyBackend)

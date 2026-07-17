@@ -1,7 +1,7 @@
 """Shared fixtures: parametrize tests across every (framework, device) combination.
 
 Each test using the ``backend`` fixture runs once per (framework, device) pair from
-:class:`SupportedFrameworks` x :class:`SupportedDevices`. Combinations whose backend
+:class:`Frameworks` x :class:`Devices`. Combinations whose backend
 package is missing or whose device is not present on the current host are marked
 ``skip`` so the test report stays interpretable on machines with partial accelerator
 support.
@@ -15,50 +15,50 @@ from typing import TYPE_CHECKING
 import pytest
 
 from decent_array.interoperability._backend_manager import reset_backends
-from decent_array.types import SupportedDevices, SupportedFrameworks
+from decent_array.types import Devices, Frameworks
 
 if TYPE_CHECKING:
     from _pytest.fixtures import FixtureRequest
 
 
-def _framework_importable(framework: SupportedFrameworks) -> bool:
+def _framework_importable(framework: Frameworks) -> bool:
     try:
-        if framework == SupportedFrameworks.NUMPY:
+        if framework == Frameworks.NUMPY:
             import numpy  # noqa: F401, PLC0415
-        elif framework == SupportedFrameworks.PYTORCH:
+        elif framework == Frameworks.PYTORCH:
             import torch  # noqa: F401, PLC0415
-        elif framework == SupportedFrameworks.JAX:
+        elif framework == Frameworks.JAX:
             import jax  # noqa: F401, PLC0415
-        elif framework == SupportedFrameworks.TENSORFLOW:
+        elif framework == Frameworks.TENSORFLOW:
             import tensorflow  # noqa: F401, PLC0415
     except ImportError:
         return False
     return True
 
 
-def _device_available(framework: SupportedFrameworks, device: SupportedDevices) -> bool:
+def _device_available(framework: Frameworks, device: Devices) -> bool:
     """Return True iff this (framework, device) pair can run on the current host."""
     if not _framework_importable(framework):
         return False
-    if framework == SupportedFrameworks.NUMPY:
-        return device == SupportedDevices.CPU
-    if framework == SupportedFrameworks.PYTORCH:
+    if framework == Frameworks.NUMPY:
+        return device == Devices.CPU
+    if framework == Frameworks.PYTORCH:
         import torch  # noqa: PLC0415
 
-        if device == SupportedDevices.CPU:
+        if device == Devices.CPU:
             return True
-        if device == SupportedDevices.GPU:
+        if device == Devices.GPU:
             try:
                 return bool(torch.cuda.is_available())
             except Exception:
                 return False
-        if device == SupportedDevices.MPS:
+        if device == Devices.MPS:
             try:
                 return bool(torch.backends.mps.is_available())
             except Exception:
                 return False
-    if framework == SupportedFrameworks.JAX:
-        if device == SupportedDevices.MPS:
+    if framework == Frameworks.JAX:
+        if device == Devices.MPS:
             return False
         import jax  # noqa: PLC0415
 
@@ -67,14 +67,14 @@ def _device_available(framework: SupportedFrameworks, device: SupportedDevices) 
         except Exception:
             return False
         return True
-    if framework == SupportedFrameworks.TENSORFLOW:
-        if device == SupportedDevices.MPS:
+    if framework == Frameworks.TENSORFLOW:
+        if device == Devices.MPS:
             return False
         import tensorflow as tf  # noqa: PLC0415
 
-        if device == SupportedDevices.CPU:
+        if device == Devices.CPU:
             return True
-        if device == SupportedDevices.GPU:
+        if device == Devices.GPU:
             try:
                 return len(tf.config.list_physical_devices("GPU")) > 0
             except Exception:
@@ -84,8 +84,8 @@ def _device_available(framework: SupportedFrameworks, device: SupportedDevices) 
 
 def _backend_params() -> list[pytest.ParameterSet]:
     params: list[pytest.ParameterSet] = []
-    for framework in SupportedFrameworks:
-        for device in SupportedDevices:
+    for framework in Frameworks:
+        for device in Devices:
             test_id = f"{framework.value}-{device.value}"
             if _device_available(framework, device):
                 params.append(pytest.param((framework, device), id=test_id))
@@ -104,7 +104,7 @@ BACKEND_PARAMS = _backend_params()
 
 
 @pytest.fixture(params=BACKEND_PARAMS)
-def backend(request: FixtureRequest) -> Iterator[tuple[SupportedFrameworks, SupportedDevices]]:
+def backend(request: FixtureRequest) -> Iterator[tuple[Frameworks, Devices]]:
     """Activate the (framework, device) backend for this test, then reset on teardown."""
     from decent_array.interoperability import set_backend  # noqa: PLC0415
 

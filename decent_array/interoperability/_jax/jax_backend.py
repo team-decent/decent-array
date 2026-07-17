@@ -10,7 +10,7 @@ rather than mutating it.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from time import time_ns
 from typing import Any, cast
 
@@ -20,38 +20,18 @@ import numpy as np
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, SupportedFrameworks
+from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
+from decent_array.types._dtypes import dtype
 
 
-def _unwrap(x: Any) -> Any:  # noqa: ANN401
-    """Return the underlying value of an :class:`Array`, or pass ``x`` through."""
-    return x.value if type(x) is Array else x
-
-
-_DTYPE_MAP = {
-    DTypes.BOOL: jnp.bool_,
-    DTypes.UINT8: jnp.uint8,
-    DTypes.UINT16: jnp.uint16,
-    DTypes.UINT32: jnp.uint32,
-    DTypes.UINT64: jnp.uint64,
-    DTypes.INT8: jnp.int8,
-    DTypes.INT16: jnp.int16,
-    DTypes.INT32: jnp.int32,
-    DTypes.INT64: jnp.int64,
-    DTypes.FLOAT32: jnp.float32,
-    DTypes.FLOAT64: jnp.float64,
-    DTypes.COMPLEX64: jnp.complex64,
-    DTypes.COMPLEX128: jnp.complex128,
-}
-
-
-class JaxBackend(Backend):  # noqa: PLR0904
+class JaxBackend(Backend):
     """JAX implementation of :class:`Backend`."""
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
-        super().__init__(device)
+    def __init__(self, device: Devices = Devices.CPU) -> None:
+        super().__init__(device, name=Frameworks.JAX.value)
         self._native_device: jax.Device = self.device_to_native(device)
         self._key: jax.Array = jax.random.key(time_ns())
 
@@ -72,19 +52,19 @@ class JaxBackend(Backend):  # noqa: PLR0904
     def eye(self, n: int) -> Array:
         return Array(jnp.eye(n, device=self._native_device))
 
-    def device_to_native(self, device: SupportedDevices) -> jax.Device:
-        if device == SupportedDevices.CPU:
+    def device_to_native(self, device: Devices) -> jax.Device:
+        if device == Devices.CPU:
             return jax.devices("cpu")[0]
-        if device == SupportedDevices.GPU:
+        if device == Devices.GPU:
             return jax.devices("gpu")[0]
         raise ValueError(f"Unsupported device for JAX: {device}")
 
-    def device_of(self, x: Array) -> SupportedDevices:
+    def device_of(self, x: Array) -> Devices:
         platform = x.value.device.platform
         if platform == "gpu":
-            return SupportedDevices.GPU
+            return Devices.GPU
         if platform == "cpu":
-            return SupportedDevices.CPU
+            return Devices.CPU
         raise TypeError(f"Unsupported JAX platform: {platform}")
 
     # Array manipulation
@@ -92,7 +72,7 @@ class JaxBackend(Backend):  # noqa: PLR0904
     def copy(self, x: Array) -> Array:
         return Array(jnp.array(x.value, copy=True))
 
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         return np.array(x.value if type(x) is Array else x)
 
     def from_numpy(self, x: NDArray[Any]) -> Array:
@@ -147,10 +127,10 @@ class JaxBackend(Backend):  # noqa: PLR0904
             raise ValueError(f"diagonal requires a 2-D array, got {x.value.ndim}-D")
         return Array(jnp.diagonal(x.value, offset=offset))
 
-    def astype(self, x: Array, dtype: DTypes) -> Array:
-        if dtype not in _DTYPE_MAP:
-            raise ValueError(f"Unsupported dtype '{dtype.value}' for NumPy backend.")
-        return Array(jnp.asarray(x.value, dtype=_DTYPE_MAP[dtype]))
+    def astype(self, x: Array, dtype: dtype) -> Array:
+        if not dtype.available:
+            raise ValueError(f"Unsupported dtype '{dtype}' for JAX backend.")
+        return Array(jnp.asarray(x.value, dtype=dtype.backend_dtype))
 
     # Linalg
 
@@ -198,52 +178,52 @@ class JaxBackend(Backend):  # noqa: PLR0904
     # covers both because PEP 484's numeric tower implicitly admits ``int``.
 
     def add(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.add(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.add(unwrap(x1), unwrap(x2)))
 
     def iadd[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.add(x1.value, _unwrap(x2))
+        x1.value = jnp.add(x1.value, unwrap(x2))
         return x1
 
     def subtract(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.subtract(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.subtract(unwrap(x1), unwrap(x2)))
 
     def isubtract[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.subtract(x1.value, _unwrap(x2))
+        x1.value = jnp.subtract(x1.value, unwrap(x2))
         return x1
 
     def multiply(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.multiply(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.multiply(unwrap(x1), unwrap(x2)))
 
     def imultiply[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.multiply(x1.value, _unwrap(x2))
+        x1.value = jnp.multiply(x1.value, unwrap(x2))
         return x1
 
     def divide(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.divide(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.divide(unwrap(x1), unwrap(x2)))
 
     def idivide[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.divide(x1.value, _unwrap(x2))
+        x1.value = jnp.divide(x1.value, unwrap(x2))
         return x1
 
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(jnp.floor_divide(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.floor_divide(unwrap(x1), unwrap(x2)))
 
     def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value = jnp.floor_divide(x1.value, _unwrap(x2))
+        x1.value = jnp.floor_divide(x1.value, unwrap(x2))
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(jnp.remainder(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.remainder(unwrap(x1), unwrap(x2)))
 
     def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value = jnp.remainder(x1.value, _unwrap(x2))
+        x1.value = jnp.remainder(x1.value, unwrap(x2))
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.power(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.power(unwrap(x1), unwrap(x2)))
 
     def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = jnp.power(x1.value, _unwrap(x2))
+        x1.value = jnp.power(x1.value, unwrap(x2))
         return x1
 
     def negative(self, x: Array) -> Array:
@@ -258,61 +238,61 @@ class JaxBackend(Backend):  # noqa: PLR0904
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.equal(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.equal(unwrap(x1), unwrap(x2)))
 
     def not_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.not_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.not_equal(unwrap(x1), unwrap(x2)))
 
     def less(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.less(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.less(unwrap(x1), unwrap(x2)))
 
     def less_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.less_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.less_equal(unwrap(x1), unwrap(x2)))
 
     def greater(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.greater(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.greater(unwrap(x1), unwrap(x2)))
 
     def greater_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.greater_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.greater_equal(unwrap(x1), unwrap(x2)))
 
     # Bitwise
 
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(jnp.bitwise_and(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.bitwise_and(unwrap(x1), unwrap(x2)))
 
     def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value = jnp.bitwise_and(x1.value, _unwrap(x2))
+        x1.value = jnp.bitwise_and(x1.value, unwrap(x2))
         return x1
 
     def bitwise_invert(self, x: Array) -> Array:
         return Array(jnp.bitwise_not(x.value))
 
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(jnp.bitwise_or(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.bitwise_or(unwrap(x1), unwrap(x2)))
 
     def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value = jnp.bitwise_or(x1.value, _unwrap(x2))
+        x1.value = jnp.bitwise_or(x1.value, unwrap(x2))
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(jnp.bitwise_xor(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.bitwise_xor(unwrap(x1), unwrap(x2)))
 
     def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value = jnp.bitwise_xor(x1.value, _unwrap(x2))
+        x1.value = jnp.bitwise_xor(x1.value, unwrap(x2))
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(jnp.left_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.left_shift(unwrap(x1), unwrap(x2)))
 
     def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value = jnp.left_shift(x1.value, _unwrap(x2))
+        x1.value = jnp.left_shift(x1.value, unwrap(x2))
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(jnp.right_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.right_shift(unwrap(x1), unwrap(x2)))
 
     def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value = jnp.right_shift(x1.value, _unwrap(x2))
+        x1.value = jnp.right_shift(x1.value, unwrap(x2))
         return x1
 
     # Operators
@@ -321,7 +301,7 @@ class JaxBackend(Backend):  # noqa: PLR0904
         return Array(jnp.sign(x.value))
 
     def maximum(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(jnp.maximum(_unwrap(x1), _unwrap(x2)))
+        return Array(jnp.maximum(unwrap(x1), unwrap(x2)))
 
     def argmax(self, x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return Array(jnp.argmax(x.value, axis=axis, keepdims=keepdims))
@@ -331,7 +311,7 @@ class JaxBackend(Backend):  # noqa: PLR0904
 
     def set_item(self, x: Array, key: ArrayKey, value: bool | int | float | complex | Array) -> None:
         # JAX arrays are immutable; rebind the wrapper to a new array with `key` updated.
-        x.value = x.value.at[key].set(_unwrap(value))
+        x.value = x.value.at[key].set(unwrap(value))
 
     def get_item(self, x: Array, key: ArrayKey) -> Array:
         return Array(x.value[key])
@@ -381,5 +361,104 @@ class JaxBackend(Backend):  # noqa: PLR0904
         self._key, sub = jax.random.split(self._key)
         return cast("jax.Array", sub)
 
+    # Dtypes
 
-register_backend(SupportedFrameworks.JAX, JaxBackend)
+    @property
+    def bool_(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.bool_)
+
+    @property
+    def uint8(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.uint8)
+
+    @property
+    def uint16(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.uint16)
+
+    @property
+    def uint32(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.uint32)
+
+    @property
+    def uint64(self) -> Any:  # noqa: ANN401
+        if _x64_enabled():
+            return np.dtype(jnp.uint64)
+        return None
+
+    @property
+    def int8(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.int8)
+
+    @property
+    def int16(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.int16)
+
+    @property
+    def int32(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.int32)
+
+    @property
+    def int64(self) -> Any:  # noqa: ANN401
+        if _x64_enabled():
+            return np.dtype(jnp.int64)
+        return None
+
+    @property
+    def float16(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.float16)
+
+    @property
+    def float32(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.float32)
+
+    @property
+    def float64(self) -> Any:  # noqa: ANN401
+        if _x64_enabled():
+            return np.dtype(jnp.float64)
+        return None
+
+    @property
+    def complex64(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.complex64)
+
+    @property
+    def complex128(self) -> Any:  # noqa: ANN401
+        if _x64_enabled():
+            return np.dtype(jnp.complex128)
+        return None
+
+    @property
+    def bfloat16(self) -> Any:  # noqa: ANN401
+        return np.dtype(jnp.bfloat16)
+
+    # Constants
+
+    @property
+    def e(self) -> Any:  # noqa: ANN401
+        """e = 2.71828..."""  # noqa: D403
+        return jnp.e
+
+    @property
+    def inf(self) -> Any:  # noqa: ANN401
+        """Infinity."""
+        return jnp.inf
+
+    @property
+    def nan(self) -> Any:  # noqa: ANN401
+        """Not-a-number."""
+        return jnp.nan
+
+    @property
+    def pi(self) -> Any:  # noqa: ANN401
+        """pi = 3.14159..."""  # noqa: D403
+        return jnp.pi
+
+
+_JAX_CONFIG_READ = cast("Callable[[str], Any]", jax.config.read)
+
+
+def _x64_enabled() -> bool:
+    return bool(_JAX_CONFIG_READ("jax_enable_x64"))
+
+
+register_backend(Frameworks.JAX, JaxBackend)

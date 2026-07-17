@@ -5,3 +5,6 @@ decent\_array.types
    :members:
    :show-inheritance:
    :undoc-members:
+
+.. autodata:: decent_array.types.ArrayTypes
+   :annotation:

@@ -12,7 +12,7 @@ classifiers = [
 ]
 license = "AGPL-3.0-only"
 dependencies = [
-  "numpy",
+  "numpy>=2,<3",
 ]
 
 [project.urls]
@@ -21,32 +21,41 @@ Source = "https://github.com/team-decent/decent-array"
 Issues = "https://github.com/team-decent/decent-array/issues"
 
 [project.optional-dependencies]
+torch = [
+  "torch>=2.5,<3",
+  "torchvision>=0.20,<1",
+]
+tf = [
+  "tensorflow>=2.18,<3",
+]
+tf-gpu = [
+  "tensorflow[and-cuda]>=2.18,<3",
+]
+jax = [
+  "jax>=0.4,<1",
+]
+jax-gpu = [
+  "jax[cuda12]>=0.4,<1",
+]
+
+[dependency-groups]
+lint = ["ruff==0.15.20"]
+typecheck = [
+  "mypy==2.1.0",
+  "types-tensorflow>=2.18,<3",
+  "microsoft-python-type-stubs @ git+https://github.com/microsoft/python-type-stubs.git@main",
+]
+test = ["pytest>=9,<10"]
 dev = [
-  "hatch",
-  "mypy",
-  "pytest",
-  "ruff",
-  "torch",
-  "torchvision",
-  "types-tensorflow",
-]
-dev-cpu = [
-  "tensorflow",
-  "jax",
-]
-dev-gpu = [
-  "tensorflow[and-cuda]",
-  "jax[cuda12]",
-]
-sphinx-tools = [
-  "sphinx",
-  "pydata-sphinx-theme",
-  "sphinxcontrib-bibtex",
+  "hatch>=1.14,<2",
+  { include-group = "lint" },
+  { include-group = "typecheck" },
+  { include-group = "test" },
 ]
 
 
 [build-system]
-requires = ["hatchling", "hatch-mypyc"]
+requires = ["hatchling>=1.26,<2", "hatch-mypyc>=0.16.0,<1"]
 build-backend = "hatchling.build"
 # Compile hot-path modules with mypyc when building wheels. End users installing from
 # a wheel get a precompiled .so; ``pip install -e .`` and source builds also run this
@@ -55,7 +64,7 @@ build-backend = "hatchling.build"
 # the ``.py`` source (dev, dev-gpu, sphinx, mypy, ruff) opt out via
 # ``HATCH_BUILD_NO_HOOKS=true`` to keep their installs fast.
 [tool.hatch.build.targets.wheel.hooks.mypyc]
-dependencies = ["hatch-mypyc"]
+dependencies = ["hatch-mypyc>=0.16.0,<1"]
 # Compile the Array wrapper plus the entire iop2 package as one mypyc group: keeping
 # them in a single compilation unit means cross-module calls (Array → backend, iop
 # function → backend) are direct compiled-to-compiled calls. New framework backends
@@ -74,31 +83,26 @@ package = "editable"
 [tool.tox.env.dev]
 description = "Generate dev venv with all dependencies, active with `source .tox/dev/bin/activate`"
 set_env = { HATCH_BUILD_NO_HOOKS = "true" }
-deps = [
-  ".[dev]",
-  ".[dev-cpu]",
-  ".[sphinx-tools]",
-  "git+https://github.com/microsoft/python-type-stubs.git@main"
+deps = ["-rdocs/requirements.txt"]
+commands_pre = [
+  ["python", "-m", "pip", "install", "--group", "dev"],
+  ["python", "-m", "pip", "install", ".[torch,tf,jax]"],
 ]
-package = "editable"
 
 [tool.tox.env.dev-gpu]
 description = "Generate dev venv with all dependencies including GPU support, active with `source .tox/dev-gpu/bin/activate`"
 set_env = { PIP_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cu128", HATCH_BUILD_NO_HOOKS = "true" } # torch 2.11 uses CUDA 13.0 which seems to have broken linalg.norm, use cuda 12.8 for now
-deps = [
-  ".[dev]",
-  ".[dev-gpu]",
-  ".[sphinx-tools]",
-  "git+https://github.com/microsoft/python-type-stubs.git@main"
+deps = ["-rdocs/requirements.txt"]
+commands_pre = [
+  ["python", "-m", "pip", "install", "--group", "dev"],
+  ["python", "-m", "pip", "install", ".[torch,tf-gpu,jax-gpu]"],
 ]
-package = "editable"
 
 [tool.tox.env.sphinx]
 description = "Generate rst and html files using sphinx"
 set_env = { HATCH_BUILD_NO_HOOKS = "true" }
-skip_install = true
 allowlist_externals = ["tox"]
-deps = [".[sphinx-tools]"]
+deps = ["-rdocs/requirements.txt"]
 commands = [
   ["tox", "-e", "clean-mypyc"],  # ensure .py source files are used for doc generation, not mypyc-compiled .so
   ["sphinx-apidoc", "-o", "docs/source/api", "decent_array", "--separate", "--no-toc", "--templatedir=docs/source/_templates"],
@@ -108,7 +112,11 @@ commands = [
 [tool.tox.env.mypy]
 description = "Run mypy (static type checker)"
 set_env = { HATCH_BUILD_NO_HOOKS = "true" }
-deps = [".[dev]", ".[dev-cpu]", "git+https://github.com/microsoft/python-type-stubs.git@main"]
+deps = []
+commands_pre = [
+  ["python", "-m", "pip", "install", "--group", "typecheck"],
+  ["python", "-m", "pip", "install", ".[torch,tf,jax]"],
+]
 commands = [["mypy", "decent_array"]]
 
 [tool.tox.env.clean-mypyc]
@@ -122,7 +130,10 @@ commands = [
 
 [tool.tox.env.mypyc]
 description = "Compile hot-path modules in place with mypyc (drops .so files alongside the .py source)"
-deps = ["mypy", "numpy", "setuptools"]
+deps = ["setuptools>=81,<82"]
+commands_pre = [
+  ["python", "-m", "pip", "install", ".", "--group", "typecheck"],
+]
 skip_install = true
 allowlist_externals = ["tox"]
 # First command clears any stale shared-runtime ``.so`` at the project root from a
@@ -140,12 +151,19 @@ commands = [
 
 [tool.tox.env.pytest]
 description = "Run pytest (test executor)"
-deps = [".[dev]", ".[dev-cpu]"]
+deps = []
+commands_pre = [
+  ["python", "-m", "pip", "install", "--group", "test"],
+  ["python", "-m", "pip", "install", ".[torch,tf,jax]"],
+]
 commands = [["pytest", "-rs"]]
 
 [tool.tox.env.ruff]
 description = "Run ruff (format and style checker)"
-deps = ["ruff"]
+deps = []
+commands_pre = [
+  ["python", "-m", "pip", "install", "--group", "lint"],
+]
 set_env = { HATCH_BUILD_NO_HOOKS = "true" }
 skip_install = true
 commands = [
@@ -194,5 +212,5 @@ lint.ignore = [
   "ICN001",   # unconventional-import-alias, complains about common import aliases like `import numpy as np` but it doesn't work for most libraries
   "PYI041",   # Removes warning for redundant types in cases like int | float | complex where complex already covers int and float, but we want to keep the union for readability and explicitness about supported types.
 ]
-preview = true
+preview = false
 line-length = 120

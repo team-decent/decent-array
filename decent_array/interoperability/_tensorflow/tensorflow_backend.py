@@ -18,39 +18,18 @@ import tensorflow as tf
 from numpy.typing import NDArray
 
 from decent_array import Array
+from decent_array._utils import unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, DTypes, SupportedArrayTypes, SupportedDevices, SupportedFrameworks
+from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
+from decent_array.types._dtypes import dtype
 
 
-def _unwrap(x: Any) -> Any:  # noqa: ANN401
-    """Return the underlying value of an :class:`Array`, or pass ``x`` through."""
-    return x.value if type(x) is Array else x
-
-
-_DTYPE_MAP = {
-    DTypes.BOOL: tf.bool,
-    DTypes.UINT8: tf.uint8,
-    DTypes.INT8: tf.int8,
-    DTypes.UINT16: tf.uint16,
-    DTypes.INT16: tf.int16,
-    DTypes.UINT32: tf.uint32,
-    DTypes.INT32: tf.int32,
-    DTypes.UINT64: tf.uint64,
-    DTypes.INT64: tf.int64,
-    DTypes.FLOAT16: tf.float16,
-    DTypes.FLOAT32: tf.float32,
-    DTypes.FLOAT64: tf.float64,
-    DTypes.COMPLEX64: tf.complex64,
-    DTypes.COMPLEX128: tf.complex128,
-}
-
-
-class TensorflowBackend(Backend):  # noqa: PLR0904
+class TensorflowBackend(Backend):
     """TensorFlow implementation of :class:`Backend`."""
 
-    def __init__(self, device: SupportedDevices = SupportedDevices.CPU) -> None:
-        super().__init__(device)
+    def __init__(self, device: Devices = Devices.CPU) -> None:
+        super().__init__(device, name=Frameworks.TENSORFLOW.value)
         self._native_device: str = self.device_to_native(device)
         self._generator: tf.random.Generator = tf.random.Generator.from_non_deterministic_state(alg="philox")
 
@@ -74,23 +53,23 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
         with tf.device(self._native_device):
             return Array(tf.eye(n))
 
-    def device_to_native(self, device: SupportedDevices) -> str:
-        if device in {SupportedDevices.CPU, SupportedDevices.GPU}:
+    def device_to_native(self, device: Devices) -> str:
+        if device in {Devices.CPU, Devices.GPU}:
             return f"/{device.value}:0"
         raise ValueError(f"Unsupported device for TensorFlow: {device}")
 
-    def device_of(self, x: Array) -> SupportedDevices:
+    def device_of(self, x: Array) -> Devices:
         device_str = x.value.device.lower()
         if "gpu" in device_str or "cuda" in device_str:
-            return SupportedDevices.GPU
-        return SupportedDevices.CPU
+            return Devices.GPU
+        return Devices.CPU
 
     # Array manipulation
 
     def copy(self, x: Array) -> Array:
         return Array(tf.identity(x.value))
 
-    def to_numpy(self, x: SupportedArrayTypes | Array) -> NDArray[Any]:
+    def to_numpy(self, x: ArrayTypes | Array) -> NDArray[Any]:
         """Return the value of an :class:`Array` as a NumPy array."""
         v = x.value if type(x) is Array else x
         if isinstance(v, tf.Tensor):
@@ -163,10 +142,10 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
             raise ValueError(f"diagonal requires a 2-D tensor, got rank {rank}")
         return Array(tf.linalg.diag_part(v, k=offset))
 
-    def astype(self, x: Array, dtype: DTypes) -> Array:
-        if dtype not in _DTYPE_MAP:
-            raise ValueError(f"Unsupported dtype '{dtype.value}' for TensorFlow backend.")
-        return Array(tf.cast(x.value, dtype=_DTYPE_MAP[dtype]))
+    def astype(self, x: Array, dtype: dtype) -> Array:
+        if not dtype.available:
+            raise ValueError(f"Unsupported dtype '{dtype}' for TensorFlow backend.")
+        return Array(tf.cast(x.value, dtype=dtype.backend_dtype))
 
     # Linalg
 
@@ -227,52 +206,52 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     # covers both because PEP 484's numeric tower implicitly admits ``int``.
 
     def add(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.add(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.add(unwrap(x1), unwrap(x2)))
 
     def iadd[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.add(x1.value, _unwrap(x2))
+        x1.value = tf.add(x1.value, unwrap(x2))
         return x1
 
     def subtract(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.subtract(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.subtract(unwrap(x1), unwrap(x2)))
 
     def isubtract[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.subtract(x1.value, _unwrap(x2))
+        x1.value = tf.subtract(x1.value, unwrap(x2))
         return x1
 
     def multiply(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.multiply(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.multiply(unwrap(x1), unwrap(x2)))
 
     def imultiply[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.multiply(x1.value, _unwrap(x2))
+        x1.value = tf.multiply(x1.value, unwrap(x2))
         return x1
 
     def divide(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.divide(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.divide(unwrap(x1), unwrap(x2)))
 
     def idivide[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.divide(x1.value, _unwrap(x2))
+        x1.value = tf.divide(x1.value, unwrap(x2))
         return x1
 
     def floor_divide(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(tf.math.floordiv(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.math.floordiv(unwrap(x1), unwrap(x2)))
 
     def ifloordiv[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value = tf.math.floordiv(x1.value, _unwrap(x2))
+        x1.value = tf.math.floordiv(x1.value, unwrap(x2))
         return x1
 
     def remainder(self, x1: int | float | Array, x2: int | float | Array) -> Array:
-        return Array(tf.math.floormod(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.math.floormod(unwrap(x1), unwrap(x2)))
 
     def imod[T: Array](self, x1: T, x2: int | float | Array) -> T:
-        x1.value = tf.math.floormod(x1.value, _unwrap(x2))
+        x1.value = tf.math.floormod(x1.value, unwrap(x2))
         return x1
 
     def pow(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.pow(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.pow(unwrap(x1), unwrap(x2)))
 
     def ipow[T: Array](self, x1: T, x2: int | float | complex | Array) -> T:
-        x1.value = tf.pow(x1.value, _unwrap(x2))
+        x1.value = tf.pow(x1.value, unwrap(x2))
         return x1
 
     def negative(self, x: Array) -> Array:
@@ -287,22 +266,22 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.equal(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.equal(unwrap(x1), unwrap(x2)))
 
     def not_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.not_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.not_equal(unwrap(x1), unwrap(x2)))
 
     def less(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.less(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.less(unwrap(x1), unwrap(x2)))
 
     def less_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.less_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.less_equal(unwrap(x1), unwrap(x2)))
 
     def greater(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.greater(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.greater(unwrap(x1), unwrap(x2)))
 
     def greater_equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.greater_equal(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.greater_equal(unwrap(x1), unwrap(x2)))
 
     # Bitwise — TF's native ``&`` dispatches to ``tf.math.logical_and`` for bool
     # tensors and ``tf.bitwise.bitwise_and`` for int tensors, matching numpy/torch/jax
@@ -310,41 +289,41 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
     # us to one dtype family.
 
     def bitwise_and(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(_unwrap(x1) & _unwrap(x2))
+        return Array(unwrap(x1) & unwrap(x2))
 
     def iand[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value &= _unwrap(x2)
+        x1.value &= unwrap(x2)
         return x1
 
     def bitwise_invert(self, x: Array) -> Array:
         return Array(~x.value)
 
     def bitwise_or(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(_unwrap(x1) | _unwrap(x2))
+        return Array(unwrap(x1) | unwrap(x2))
 
     def ior[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value |= _unwrap(x2)
+        x1.value |= unwrap(x2)
         return x1
 
     def bitwise_xor(self, x1: bool | int | Array, x2: bool | int | Array) -> Array:
-        return Array(_unwrap(x1) ^ _unwrap(x2))
+        return Array(unwrap(x1) ^ unwrap(x2))
 
     def ixor[T: Array](self, x1: T, x2: bool | int | Array) -> T:
-        x1.value ^= _unwrap(x2)
+        x1.value ^= unwrap(x2)
         return x1
 
     def bitwise_left_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(tf.bitwise.left_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.bitwise.left_shift(unwrap(x1), unwrap(x2)))
 
     def ilshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value = tf.bitwise.left_shift(x1.value, _unwrap(x2))
+        x1.value = tf.bitwise.left_shift(x1.value, unwrap(x2))
         return x1
 
     def bitwise_right_shift(self, x1: int | Array, x2: int | Array) -> Array:
-        return Array(tf.bitwise.right_shift(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.bitwise.right_shift(unwrap(x1), unwrap(x2)))
 
     def irshift[T: Array](self, x1: T, x2: int | Array) -> T:
-        x1.value = tf.bitwise.right_shift(x1.value, _unwrap(x2))
+        x1.value = tf.bitwise.right_shift(x1.value, unwrap(x2))
         return x1
 
     # Operators
@@ -353,7 +332,7 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
         return Array(tf.sign(x.value))
 
     def maximum(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:
-        return Array(tf.maximum(_unwrap(x1), _unwrap(x2)))
+        return Array(tf.maximum(unwrap(x1), unwrap(x2)))
 
     def argmax(self, x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         v = x.value
@@ -388,7 +367,7 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
         # that hammer set_item in tight loops should consider numpy or pytorch.
         original = x.value
         np_array = original.numpy().copy()
-        np_array[key] = np.asarray(_unwrap(value))
+        np_array[key] = np.asarray(unwrap(value))
         with tf.device(self._native_device):
             x.value = tf.convert_to_tensor(np_array, dtype=original.dtype)
 
@@ -434,5 +413,109 @@ class TensorflowBackend(Backend):  # noqa: PLR0904
             indices = tf.cast(tf.math.top_k(scores, k=size).indices, tf.int32)
         return Array(tf.gather(v, indices))
 
+    # Dtypes
 
-register_backend(SupportedFrameworks.TENSORFLOW, TensorflowBackend)
+    @property
+    def bool_(self) -> tf.dtypes.DType:
+        return tf.bool
+
+    @property
+    def uint8(self) -> tf.dtypes.DType:
+        return tf.uint8
+
+    @property
+    def uint16(self) -> tf.dtypes.DType:
+        return tf.uint16
+
+    @property
+    def uint32(self) -> tf.dtypes.DType:
+        return tf.uint32
+
+    @property
+    def uint64(self) -> tf.dtypes.DType:
+        return tf.uint64
+
+    @property
+    def int8(self) -> tf.dtypes.DType:
+        return tf.int8
+
+    @property
+    def int16(self) -> tf.dtypes.DType:
+        return tf.int16
+
+    @property
+    def int32(self) -> tf.dtypes.DType:
+        return tf.int32
+
+    @property
+    def int64(self) -> tf.dtypes.DType:
+        return tf.int64
+
+    @property
+    def float16(self) -> tf.dtypes.DType:
+        return tf.float16
+
+    @property
+    def float32(self) -> tf.dtypes.DType:
+        return tf.float32
+
+    @property
+    def float64(self) -> tf.dtypes.DType:
+        return tf.float64
+
+    @property
+    def complex64(self) -> tf.dtypes.DType:
+        return tf.complex64
+
+    @property
+    def complex128(self) -> tf.dtypes.DType:
+        return tf.complex128
+
+    @property
+    def qint8(self) -> tf.dtypes.DType:
+        return tf.qint8
+
+    @property
+    def qint16(self) -> tf.dtypes.DType:
+        return tf.qint16
+
+    @property
+    def qint32(self) -> tf.dtypes.DType:
+        return tf.qint32
+
+    @property
+    def quint8(self) -> tf.dtypes.DType:
+        return tf.quint8
+
+    @property
+    def quint16(self) -> tf.dtypes.DType:
+        return tf.quint16
+
+    @property
+    def bfloat16(self) -> tf.dtypes.DType:
+        return tf.bfloat16
+
+    # Constants
+
+    @property
+    def e(self) -> Any:  # noqa: ANN401
+        """e = 2.71828..."""  # noqa: D403
+        return tf.experimental.numpy.e
+
+    @property
+    def inf(self) -> Any:  # noqa: ANN401
+        """Infinity."""
+        return tf.experimental.numpy.inf
+
+    @property
+    def nan(self) -> Any:  # noqa: ANN401
+        """Not-a-number."""
+        return tf.experimental.numpy.nan
+
+    @property
+    def pi(self) -> Any:  # noqa: ANN401
+        """pi = 3.14159..."""  # noqa: D403
+        return tf.experimental.numpy.pi
+
+
+register_backend(Frameworks.TENSORFLOW, TensorflowBackend)

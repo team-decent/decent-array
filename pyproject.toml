@@ -42,7 +42,7 @@ jax-gpu = [
 [dependency-groups]
 lint = ["ruff==0.15.20"]
 typecheck = [
-  "mypy==2.1.0",
+  "mypy==2.3.0",
   "types-tensorflow>=2.18,<3",
   "microsoft-python-type-stubs @ git+https://github.com/microsoft/python-type-stubs.git@main",
 ]

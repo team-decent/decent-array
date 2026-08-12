@@ -20,6 +20,7 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING, Any, cast
 
+from decent_array._errors import no_backend_error
 from decent_array.interoperability._backend_manager import _instantiate, register_backend_listener
 from decent_array.types import Devices, Frameworks
 
@@ -34,7 +35,6 @@ if TYPE_CHECKING:
 _NUMPY_STATE_KEY = "__numpy_rng_state__"
 _PYTHON_RANDOM_KEY = "__python_random_state__"
 _BACKEND_INSTANCE: Backend | None = None
-_error = RuntimeError("No backend active: call 'set_backend' with a supported framework to activate one.")
 
 
 def _update_backend(backend: Backend | None) -> None:
@@ -63,7 +63,7 @@ class _RngCoordinator:
 
         """
         if _BACKEND_INSTANCE is None:
-            raise _error
+            raise no_backend_error
 
         random.seed(seed)
         active = _BACKEND_INSTANCE
@@ -89,7 +89,7 @@ class _RngCoordinator:
 
         """
         if _BACKEND_INSTANCE is None:
-            raise _error
+            raise no_backend_error
 
         active = _BACKEND_INSTANCE
         state = active.get_rng_state()
@@ -102,7 +102,7 @@ class _RngCoordinator:
     def set_rng_state(self, state: dict[str, Any]) -> None:
         """Restore a snapshot produced by :meth:`get_rng_state`."""
         if _BACKEND_INSTANCE is None:
-            raise _error
+            raise no_backend_error
 
         # Copy so we can mutate without surprising the caller.
         state = dict(state)
@@ -188,33 +188,33 @@ def derive_seed() -> int:
 def normal(mean: float = 0.0, std: float = 1.0, shape: tuple[int, ...] = ()) -> Array:
     """Draw normally distributed samples on the active backend."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.normal(mean, std, shape)
 
 
 def uniform(low: float = 0.0, high: float = 1.0, shape: tuple[int, ...] = ()) -> Array:
     """Draw uniformly distributed samples on the active backend."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.uniform(low, high, shape)
 
 
 def normal_like(x: Array, mean: float = 0.0, std: float = 1.0) -> Array:
     """Draw normally distributed samples shaped like ``x`` with same dtype."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.normal_like(x, mean, std)
 
 
 def uniform_like(x: Array, low: float = 0.0, high: float = 1.0) -> Array:
     """Draw uniformly distributed samples shaped like ``x`` with same dtype."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.uniform_like(x, low, high)
 
 
 def choice(x: Array, size: int, replace: bool = True) -> Array:
     """Sample ``size`` elements from ``x``."""
     if _BACKEND_INSTANCE is None:
-        raise _error
+        raise no_backend_error
     return _BACKEND_INSTANCE.choice(x, size, replace)

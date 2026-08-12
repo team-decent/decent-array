@@ -10,6 +10,35 @@ Requires `Python 3.13+ <https://www.python.org/downloads/>`_
     pip install decent-array
 
 
+Supported devices
+-----------------
+
+.. list-table:: device support across frameworks
+   :header-rows: 1
+   :widths: 22 10 10 10 10
+
+   * - device
+     - NumPy
+     - JAX
+     - PyTorch
+     - TensorFlow
+   * - CPU
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+   * - GPU
+     - 
+     - ✓
+     - ✓
+     - ✓
+   * - MPS
+     - 
+     - 
+     - ✓
+     - 
+
+
 Constants
 ---------
 

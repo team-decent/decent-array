@@ -93,6 +93,14 @@ class Backend(ABC):
         """Convert a Python scalar to an :class:`Array` on this backend."""
 
     @abstractmethod
+    def to_scalar(self, x: Array) -> Any:  # noqa: ANN401
+        """
+        Convert a 0-dim array to a scalar.
+
+        This method must use ``is_scalar(x)`` to raise when ``x`` is not 0-dim.
+        """
+
+    @abstractmethod
     def stack(self, arrays: Sequence[Array], axis: int = 0) -> Array:
         """Stack a sequence of arrays along a new dimension."""
 

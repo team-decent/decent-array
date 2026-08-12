@@ -355,23 +355,23 @@ class Array:
 
     def __float__(self) -> float:
         """Coerce a scalar array to a Python float."""
-        return float(self._backend.squeeze(self).value)
+        return float(self.item())
 
     def __bool__(self) -> bool:
         """Coerce a scalar array to a Python bool."""
-        return bool(self._backend.squeeze(self).value)
+        return bool(self.item())
 
     def __int__(self) -> int:
         """Coerce a scalar array to a Python int."""
-        return int(self._backend.squeeze(self).value)
+        return int(self.item())
 
     def __complex__(self) -> complex:
         """Coerce a scalar array to a Python complex."""
-        return complex(self._backend.squeeze(self).value)
+        return complex(self.item())
 
     def __index__(self) -> int:
         """Coerce a scalar array to a Python int."""
-        return int(self._backend.squeeze(self).value)
+        return int(self.item())
 
     # Repr -----------------------------------------------------------------
 
@@ -444,3 +444,13 @@ class Array:
     def numpy(self) -> NDArray[Any]:
         """Return a NumPy array view of the array's data."""
         return self._backend.to_numpy(self)
+
+    def item(self) -> Any:  # noqa: ANN401
+        """
+        Convert 0-dim array to Python scalar.
+
+        Raises:
+            TypeError: if ``x`` is not 0-dimensional.
+
+        """
+        return self._backend.to_scalar(self)

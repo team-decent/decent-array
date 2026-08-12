@@ -20,7 +20,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from decent_array import Array
-from decent_array._utils import unwrap
+from decent_array._errors import (
+    MatrixTransposeError,
+    NDimError,
+    UnsupportedDeviceError,
+    UnsupportedDTypeCreationError,
+    stack_empty_error,
+)
+from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
@@ -32,6 +39,8 @@ class JaxBackend(Backend):
 
     def __init__(self, device: Devices = Devices.CPU) -> None:
         super().__init__(device, name=Frameworks.JAX.value)
+        if device == Devices.MPS:
+            UnsupportedDeviceError(self.name, device.value)
         self._native_device: jax.Device = self.device_to_native(device)
         self._key: jax.Array = jax.random.key(time_ns())
 
@@ -85,9 +94,21 @@ class JaxBackend(Backend):
     def asarray(self, x: bool | int | float | complex) -> Array:
         return Array(jnp.array(x, device=self._native_device))
 
+    def to_scalar(self, x: Array) -> Any:  # noqa: ANN401
+        """
+        Convert a 0-dim array to a scalar.
+
+        Raises:
+            TypeError: if ``x`` is not 0-dimensional.
+
+        """
+        if not is_scalar(x):
+            raise TypeError("Only 0-dim arrays can be converted to Python scalars.")
+        return x.value.item()
+
     def stack(self, arrays: Sequence[Array], axis: int = 0) -> Array:
         if len(arrays) == 0:
-            raise ValueError("Cannot stack an empty sequence of arrays.")
+            raise stack_empty_error
         return Array(jnp.stack([a.value for a in arrays], axis=axis))
 
     def reshape(self, x: Array, shape: tuple[int, ...]) -> Array:
@@ -97,10 +118,9 @@ class JaxBackend(Backend):
         return Array(jnp.transpose(x.value, axes=axis))
 
     def matrix_transpose(self, x: Array) -> Array:
-        v = x.value
-        if v.ndim < 2:
-            raise ValueError(f"matrix_transpose requires an array with at least 2 dimensions, got {v.ndim}-D")
-        return Array(jnp.swapaxes(v, -1, -2))
+        if x.ndim < 2:
+            raise MatrixTransposeError(x.ndim)
+        return Array(jnp.swapaxes(x.value, -1, -2))
 
     def shape(self, x: Array) -> tuple[int, ...]:
         return tuple(x.value.shape)
@@ -118,18 +138,18 @@ class JaxBackend(Backend):
         return Array(jnp.expand_dims(x.value, axis=axis))
 
     def diag(self, x: Array) -> Array:
-        if x.value.ndim != 1:
-            raise ValueError(f"diag requires a 1-D array, got {x.value.ndim}-D")
+        if x.ndim != 1:
+            raise NDimError(1, x.ndim)
         return Array(jnp.diag(x.value))
 
     def diagonal(self, x: Array, offset: int = 0) -> Array:
-        if x.value.ndim != 2:
-            raise ValueError(f"diagonal requires a 2-D array, got {x.value.ndim}-D")
+        if x.ndim != 2:
+            raise NDimError(2, x.ndim)
         return Array(jnp.diagonal(x.value, offset=offset))
 
     def astype(self, x: Array, dtype: dtype) -> Array:
         if not dtype.available:
-            raise ValueError(f"Unsupported dtype '{dtype}' for JAX backend.")
+            raise UnsupportedDTypeCreationError(dtype, self.name, self.device.value)
         return Array(jnp.asarray(x.value, dtype=dtype.backend_dtype))
 
     # Linalg

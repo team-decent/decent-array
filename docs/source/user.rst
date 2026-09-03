@@ -15,20 +15,23 @@ Supported devices
 
 .. list-table:: device support across frameworks
    :header-rows: 1
-   :widths: 22 10 10 10 10
+   :widths: 22 10 10 10 10 10
 
    * - device
      - NumPy
      - JAX
      - PyTorch
      - TensorFlow
+     - CuPy
    * - CPU
      - ✓
      - ✓
      - ✓
      - ✓
+     -
    * - GPU
      - 
+     - ✓
      - ✓
      - ✓
      - ✓
@@ -37,6 +40,7 @@ Supported devices
      - 
      - ✓
      - 
+     -
 
 
 Constants
@@ -120,15 +124,17 @@ reliable way is to try operations that involve the dtype and observe if the fram
 
 .. list-table:: dtype support across frameworks
    :header-rows: 1
-   :widths: 22 10 10 10 12 36
+   :widths: 22 10 10 10 10 10 36
 
    * - dtype
      - NumPy
      - JAX
      - PyTorch
      - TensorFlow
+     - CuPy
      - Notes
    * - ``bool_``
+     - ✓
      - ✓
      - ✓
      - ✓
@@ -140,7 +146,9 @@ reliable way is to try operations that involve the dtype and observe if the fram
      -
      -
      -
+     -
    * - ``int8``
+     - ✓
      - ✓
      - ✓
      - ✓
@@ -151,8 +159,10 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ✓
      - ✓
      - ✓
+     - ✓
      - 
    * - ``int32``
+     - ✓
      - ✓
      - ✓
      - ✓
@@ -163,8 +173,10 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ⚠️
      - ✓
      - ✓
+     - ✓
      - JAX requires ``jax_enable_x64=True``
    * - **Unsigned integers**
+     -
      -
      -
      -
@@ -175,11 +187,13 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ✓
      - ✓
      - ✓
+     - ✓
      - 
    * - ``uint16``
      - ✓
      - ⚠️
      - ⚠️
+     - ✓
      - ✓
      - JAX requires ``jax_enable_x64=True``; PyTorch support is limited/experimental
    * - ``uint32``
@@ -187,14 +201,17 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ⚠️
      - ⚠️
      - ✓
+     - ✓
      - JAX requires ``jax_enable_x64=True``; PyTorch support is limited/experimental
    * - ``uint64``
      - ✓
      - ⚠️
      - ⚠️
      - ✓
+     - ✓
      - JAX requires ``jax_enable_x64=True``; PyTorch support is limited/experimental
    * - **Floating point**
+     -
      -
      -
      -
@@ -205,14 +222,17 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ✓
      - ✓
      - ✓
+     - ✓
      - 
    * - ``bfloat16``
      - ✗
      - ✓
      - ✓
      - ✓
+     - ✓
      - PyTorch support is limited/experimental
    * - ``float32``
+     - ✓
      - ✓
      - ✓
      - ✓
@@ -223,9 +243,11 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ⚠️
      - ✓
      - ✓
+     - ✓
      - JAX requires ``jax_enable_x64=True``; PyTorch does not support on MPS
    * - ``float128``
      - ⚠️
+     - ✗
      - ✗
      - ✗
      - ✗
@@ -236,7 +258,9 @@ reliable way is to try operations that involve the dtype and observe if the fram
      -
      -
      -
+     -
    * - ``complex64``
+     - ✓
      - ✓
      - ✓
      - ✓
@@ -247,9 +271,11 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ⚠️
      - ✓
      - ✓
+     - ✓
      - JAX requires ``jax_enable_x64=True``
    * - ``complex256``
      - ⚠️
+     - ✗
      - ✗
      - ✗
      - ✗
@@ -260,37 +286,44 @@ reliable way is to try operations that involve the dtype and observe if the fram
      -
      -
      -
+     -
    * - ``qint8``
      - ✗
      - ✗
      - ✓
      - ✓
+     - ✗
      - 
    * - ``quint8``
      - ✗
      - ✗
      - ✓
      - ✓
+     - ✗
      - 
    * - ``qint16``
      - ✗
      - ✗
      - ✗
      - ✓
+     - ✗
      - 
    * - ``quint16``
      - ✗
      - ✗
      - ✗
      - ✓
+     - ✗
      - 
    * - ``qint32``
      - ✗
      - ✗
      - ✓
      - ✓
+     - ✗
      - 
    * - **Miscellaneous**
+     -
      -
      -
      -
@@ -301,21 +334,25 @@ reliable way is to try operations that involve the dtype and observe if the fram
      - ✗
      - ✗
      - ✗
+     - ✗
      - Equivalent to ``np.str_``
    * - ``bytes_``
      - ✓
      - ✗
      - ✗
      - ✓
+     - ✗
      - Equivalent to ``np.bytes_`` and ``tf.string``
    * - ``object_``
      - ✓
      - ✗
      - ✗
      - ✗
+     - ✗
      - 
    * - ``void``
      - ✓
+     - ✗
      - ✗
      - ✗
      - ✗

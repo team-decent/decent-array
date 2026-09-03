@@ -15,7 +15,14 @@ import torch
 from numpy.typing import NDArray
 
 from decent_array import Array
-from decent_array._errors import MatrixTransposeError, NDimError, UnsupportedDTypeCreationError, stack_empty_error
+from decent_array._errors import (
+    MatrixTransposeError,
+    NDimError,
+    NotScalarError,
+    UnsupportedDeviceError,
+    UnsupportedDTypeCreationError,
+    stack_empty_error,
+)
 from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
@@ -55,7 +62,7 @@ class PyTorchBackend(Backend):
             return "cuda"
         if device == Devices.MPS:
             return "mps"
-        raise ValueError(f"Unsupported device: {device}")
+        raise UnsupportedDeviceError(self.name, device.value)
 
     def device_of(self, x: Array) -> Devices:
         kind = x.value.device.type
@@ -100,7 +107,7 @@ class PyTorchBackend(Backend):
 
         """
         if not is_scalar(x):
-            raise TypeError("Only 0-dim arrays can be converted to Python scalars.")
+            raise NotScalarError(x.ndim)
         return x.value.item()
 
     def stack(self, arrays: Sequence[Array], axis: int = 0) -> Array:

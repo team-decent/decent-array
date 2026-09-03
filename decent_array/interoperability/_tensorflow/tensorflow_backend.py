@@ -21,6 +21,7 @@ from decent_array import Array
 from decent_array._errors import (
     MatrixTransposeError,
     NDimError,
+    NotScalarError,
     UnsupportedDeviceError,
     UnsupportedDTypeCreationError,
     stack_empty_error,
@@ -65,7 +66,7 @@ class TensorflowBackend(Backend):
     def device_to_native(self, device: Devices) -> str:
         if device in {Devices.CPU, Devices.GPU}:
             return f"/{device.value}:0"
-        raise ValueError(f"Unsupported device for TensorFlow: {device}")
+        raise UnsupportedDeviceError(self.name, device.value)
 
     def device_of(self, x: Array) -> Devices:
         device_str = x.value.device.lower()
@@ -113,7 +114,7 @@ class TensorflowBackend(Backend):
 
         """
         if not is_scalar(x):
-            raise TypeError("Only 0-dim arrays can be converted to Python scalars.")
+            raise NotScalarError(x.ndim)
         return x.value.numpy().item()
 
     def stack(self, arrays: Sequence[Array], axis: int = 0) -> Array:

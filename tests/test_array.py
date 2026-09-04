@@ -567,3 +567,17 @@ def test_item_n_dim(backend: tuple) -> None:
     a = _create_array([1.0, 2.0])
     with pytest.raises(TypeError, match=r"Only 0-dim arrays"):
             _ = a.item()
+
+
+# Copy -------------------------------------------------------------------
+
+
+def test_deepcopy(backend: tuple) -> None:
+    from copy import deepcopy
+
+    src = iop.from_numpy(np.array([1.0, 2.0, 3.0], dtype=np.float32))
+    dst = deepcopy(src)
+    np.testing.assert_allclose(_np(dst), [1.0, 2.0, 3.0])
+    # Mutating the copy shouldn't affect the original.
+    dst[0] = 99.0
+    np.testing.assert_allclose(_np(src), [1.0, 2.0, 3.0])

@@ -383,6 +383,14 @@ class Array:
         """Stringify the wrapped value, not the wrapper."""
         return str(self.value)
 
+    # Copy -----------------------------------------------------------------
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> Array:
+        """Deep copy of the array."""
+        copied = self._backend.copy(self)
+        memo[id(self)] = copied
+        return copied
+
     # Properties -----------------------------------------------------------
 
     @property

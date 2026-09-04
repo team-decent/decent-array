@@ -1,6 +1,6 @@
 [project]
 name = "decent-array"
-version = "0.2.1"
+version = "0.2.2"
 authors = [{name = "Simon Granström"}, {name = "Nicola Bastianello"}]
 maintainers = [{name = "Team Decent"}]
 description = "A library of array operations and linear algebra primitives for interoperability across ML frameworks."

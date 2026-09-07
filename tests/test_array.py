@@ -575,9 +575,39 @@ def test_item_n_dim(backend: tuple) -> None:
 def test_deepcopy(backend: tuple) -> None:
     from copy import deepcopy
 
-    src = iop.from_numpy(np.array([1.0, 2.0, 3.0], dtype=np.float32))
+    src = _create_array([1.0, 2.0, 3.0])
     dst = deepcopy(src)
     np.testing.assert_allclose(_np(dst), [1.0, 2.0, 3.0])
     # Mutating the copy shouldn't affect the original.
     dst[0] = 99.0
     np.testing.assert_allclose(_np(src), [1.0, 2.0, 3.0])
+
+
+# Pickle/unpickle --------------------------------------------------------
+
+
+def test_pickle(backend: tuple) -> None:
+    import pickle
+
+    original = _create_array([1.0, 2.0, 3.0])
+
+    payload = pickle.dumps(
+        original,
+        protocol=pickle.HIGHEST_PROTOCOL,
+    )
+
+    restored = pickle.loads(payload)
+
+    np.testing.assert_array_equal(_np(restored.value), _np(original.value))
+
+
+def test_pickle_uses_reduce(backend: tuple) -> None:
+    import pickle
+    from unittest.mock import patch
+
+    array = _create_array([1.0, 2.0, 3.0])
+
+    with patch.object(Array, "__reduce__", wraps=array.__reduce__) as reduce:
+        payload = pickle.dumps(array)
+
+    reduce.assert_called_once()

@@ -26,6 +26,7 @@ Hot-path notes:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Self
 
 from decent_array.interoperability._backend_manager import register_backend_listener
@@ -47,6 +48,11 @@ def _update_backend(backend: Backend | None) -> None:
 
 
 register_backend_listener(_update_backend)
+
+
+def _reconstruct_array(value: ArrayTypes) -> Array:
+    """Reconstruct array after pickling."""
+    return Array(value)
 
 
 class Array:
@@ -390,6 +396,12 @@ class Array:
         copied = self._backend.copy(self)
         memo[id(self)] = copied
         return copied
+
+    # Pickle/unpickle --------------------------------------------------------
+
+    def __reduce__(self) -> tuple[Callable[..., Array], tuple[ArrayTypes]]:
+        """Handle unpickling of the array."""
+        return (_reconstruct_array, (self.value,))
 
     # Properties -----------------------------------------------------------
 

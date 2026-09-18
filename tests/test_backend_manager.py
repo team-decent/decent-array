@@ -98,8 +98,15 @@ def test_set_backend_instantiates_dtypes() -> None:
     dt2 = float32  # global dtype bound during set_dtype
     dt3 = dtype("float32")  # backend is set, so this is bound to backend dtype
 
-    assert dt1 != dt2  # dtypes are not equal if not avaiable, and dt1 is not available
-    assert dt2 == dt3  # available because bound to backend, and equal
+    # check availability status
+    assert not dt1.available
+    assert dt2.available
+    assert dt3.available
+
+    # equality check the name attribute, so all these should be true (irrespective of availability)
+    assert dt1 == dt2
+    assert dt1 == dt3
+    assert dt2 == dt3
 
     dt4 = dtype("int16")
     assert dt3 != dt4

@@ -74,7 +74,7 @@ class dtype:  # noqa: N801
         """Check equivalence by ``name`` attributes."""
         if not isinstance(other, dtype):
             return NotImplemented
-        return self.name == other.name and self.available and other.available
+        return self.name == other.name
 
     def __hash__(self) -> int:
         """Hash of the dtype."""
@@ -131,12 +131,9 @@ _NUMERIC_DTYPES = _INTEGRAL_DTYPES | _REAL_FLOATING_DTYPES | _COMPLEX_FLOATING_D
 _ALL_DTYPES = _BOOL_DTYPES | _NUMERIC_DTYPES | _MISCELLANEOUS_DTYPES
 
 
-_AVAILABLE_DTYPES = {dt for dt in _ALL_DTYPES if dt.available}
-
-
+# caches for available dtypes and reverse mapping; these are populated during set_backend
+_AVAILABLE_DTYPES: set[dtype] = set()
 _BACKEND_DTYPE_TO_DTYPE: dict[Any, dtype] = {}
-for dt in _AVAILABLE_DTYPES:
-    _BACKEND_DTYPE_TO_DTYPE[dt._backend_dtype] = dt  # noqa: SLF001
 
 
 _ALIASES = {

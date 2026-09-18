@@ -131,6 +131,17 @@ def reset_backends() -> None:
     for listener in _BACKEND_LISTENERS:
         listener(None)
 
+    # clear dtypes bindings
+    for dt in dtypes._ALL_DTYPES:  # noqa: SLF001
+        dt._available = False  # noqa: SLF001
+        dt._backend_dtype = None  # noqa: SLF001
+
+    dtypes._AVAILABLE_DTYPES.clear()  # noqa: SLF001
+    dtypes._BACKEND_DTYPE_TO_DTYPE.clear()  # noqa: SLF001
+
+    # clear constants bindings, restoring to Python math defaults
+    constants._reset()  # noqa: SLF001
+
 
 def default_device() -> Devices:
     """
@@ -219,6 +230,14 @@ def _bind_dtypes(backend: Backend | None) -> None:
         dt._available = backend_dt is not None  # noqa: SLF001
         dt._backend_dtype = backend_dt  # noqa: SLF001
 
+    # refresh caches of available dtypes and reverse mapping
+    dtypes._AVAILABLE_DTYPES.clear()  # noqa: SLF001
+    dtypes._AVAILABLE_DTYPES.update(dt for dt in dtypes._ALL_DTYPES if dt.available)  # noqa: SLF001
+
+    dtypes._BACKEND_DTYPE_TO_DTYPE.clear()  # noqa: SLF001
+    for dt in dtypes._AVAILABLE_DTYPES:  # noqa: SLF001
+        dtypes._BACKEND_DTYPE_TO_DTYPE[dt.backend_dtype] = dt  # noqa: SLF001
+
 
 def _bind_constants(backend: Backend | None) -> None:
     """Bind constants to the corresponding backend constants."""
@@ -226,6 +245,5 @@ def _bind_constants(backend: Backend | None) -> None:
         return
     for name in constants._CONSTANTS:  # noqa: SLF001
         backend_c = getattr(backend, name, None)
-        if backend_c is None:
-            return
-        setattr(constants, name, backend_c)
+        if backend_c is not None:
+            setattr(constants, name, backend_c)

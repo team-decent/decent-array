@@ -255,6 +255,18 @@ class JaxBackend(Backend):
     def sqrt(self, x: Array) -> Array:
         return Array(jnp.sqrt(x.value))
 
+    def isfinite(self, x: Array) -> Array:
+        """Element-wise test for finite values."""
+        return Array(jnp.isfinite(x.value))
+
+    def isinf(self, x: Array) -> Array:
+        """Element-wise test for infinite values."""
+        return Array(jnp.isinf(x.value))
+
+    def isnan(self, x: Array) -> Array:
+        """Element-wise test for NaN values."""
+        return Array(jnp.isnan(x.value))
+
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:

@@ -278,6 +278,18 @@ class TensorflowBackend(Backend):
     def sqrt(self, x: Array) -> Array:
         return Array(tf.sqrt(x.value))
 
+    def isfinite(self, x: Array) -> Array:
+        """Element-wise test for finite values."""
+        return Array(tf.math.is_finite(x.value))
+
+    def isinf(self, x: Array) -> Array:
+        """Element-wise test for infinite values."""
+        return Array(tf.math.is_inf(x.value))
+
+    def isnan(self, x: Array) -> Array:
+        """Element-wise test for NaN values."""
+        return Array(tf.math.is_nan(x.value))
+
     # Comparisons
 
     def equal(self, x1: int | float | complex | Array, x2: int | float | complex | Array) -> Array:

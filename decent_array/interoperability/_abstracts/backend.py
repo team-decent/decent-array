@@ -270,6 +270,18 @@ class Backend(ABC):
     def sqrt(self, x: Array) -> Array:
         """Element-wise square root."""
 
+    @abstractmethod
+    def isfinite(self, x: Array) -> Array:
+        """Element-wise test for finite values."""
+
+    @abstractmethod
+    def isinf(self, x: Array) -> Array:
+        """Element-wise test for infinite values."""
+
+    @abstractmethod
+    def isnan(self, x: Array) -> Array:
+        """Element-wise test for NaN values."""
+
     # Comparisons — both operands may be Array or scalar.
 
     @abstractmethod

@@ -147,3 +147,24 @@ def sqrt(x: Array) -> Array:
     if _BACKEND_INSTANCE is None:
         raise no_backend_error
     return _BACKEND_INSTANCE.sqrt(x)
+
+
+def isfinite(x: Array) -> Array:
+    """Element-wise test for finite values."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.isfinite(x)
+
+
+def isinf(x: Array) -> Array:
+    """Element-wise test for infinite values."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.isinf(x)
+
+
+def isnan(x: Array) -> Array:
+    """Element-wise test for NaN values."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.isnan(x)

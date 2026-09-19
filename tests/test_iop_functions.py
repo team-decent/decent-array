@@ -478,6 +478,21 @@ def test_sqrt(backend: tuple) -> None:
     np.testing.assert_allclose(_np(iop.sqrt(arr)), [1.0, 2.0, 3.0])
 
 
+def test_isfinite(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([1.0, np.inf, -np.inf, np.nan], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.isfinite(arr)), [True, False, False, False])
+
+
+def test_isinf(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([1.0, np.inf, -np.inf, np.nan], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.isinf(arr)), [False, True, True, False])
+
+
+def test_isnan(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([1.0, np.inf, -np.inf, np.nan], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.isnan(arr)), [False, False, False, True])
+
+
 # Operators --------------------------------------------------------------
 
 

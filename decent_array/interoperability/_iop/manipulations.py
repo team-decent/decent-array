@@ -66,8 +66,15 @@ def from_numpy_like(x: NDArray[Any], like: Array) -> Array:
     return _BACKEND_INSTANCE.from_numpy_like(x, like)
 
 
-def asarray(x: float | bool) -> Array:
-    """Convert a Python scalar to an :class:`~decent_array.Array` on the active backend."""
+def asarray(x: ArrayTypes | Array) -> Array:
+    """
+    Convert `x` into an :class:`~decent_array.Array` on the active backend.
+
+    `x` can be a scalar, a native array, a nested sequence, an object supporting Python's buffer protocol. Note that `x`
+    is passed directly to the equivalent backend-native asarray function. If `x` is an :class:`~decent_array.Array`
+    instance, it is returned unchanged.
+
+    """
     if _BACKEND_INSTANCE is None:
         raise no_backend_error
     return _BACKEND_INSTANCE.asarray(x)

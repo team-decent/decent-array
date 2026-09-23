@@ -77,15 +77,15 @@ def max(  # noqa: A001
     return _BACKEND_INSTANCE.max(x, axis, keepdims)
 
 
-def any(x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:  # noqa: A001
-    """Return True if any element of ``x`` is truthy."""
+def any(x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:  # noqa: A001
+    """Test whether any array element along axis is truthy."""
     if _BACKEND_INSTANCE is None:
         raise no_backend_error
     return _BACKEND_INSTANCE.any(x, axis, keepdims)
 
 
-def all(x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:  # noqa: A001
-    """Return True if all elements of ``x`` are truthy."""
+def all(x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:  # noqa: A001
+    """Test whether all array elements along axis are truthy."""
     if _BACKEND_INSTANCE is None:
         raise no_backend_error
     return _BACKEND_INSTANCE.all(x, axis, keepdims)

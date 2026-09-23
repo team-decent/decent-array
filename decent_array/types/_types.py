@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Buffer, Sequence
 from enum import Enum
 from typing import TYPE_CHECKING, SupportsIndex, TypeAlias, Union
 
@@ -14,6 +15,10 @@ if TYPE_CHECKING:
 
     from decent_array._array import Array
 
+Scalar: TypeAlias = bool | int | float | complex | numpy.generic  # noqa: UP040
+"""
+Type alias for scalar types supported in decent-array.
+"""
 
 ArrayLike: TypeAlias = Union["numpy.ndarray", "torch.Tensor", "tf.Tensor", "jax.Array"]  # noqa: UP040
 """
@@ -21,7 +26,12 @@ Type alias for array-like types supported in decent-array, including NumPy array
 PyTorch tensors, TensorFlow tensors, and JAX arrays.
 """
 
-ArrayTypes: TypeAlias = bool | int | float | complex | numpy.generic | ArrayLike  # noqa: UP040
+NestedSequence: TypeAlias = "Sequence[Scalar | NestedSequence]"  # noqa: UP040
+"""
+Type alias for nested sequences supported in decent-array.
+"""
+
+ArrayTypes: TypeAlias = Scalar | ArrayLike | NestedSequence | Buffer  # noqa: UP040
 """
 Type alias for supported scalar/array types in decent-array.
 """

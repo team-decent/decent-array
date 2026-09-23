@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from decent_array import Array
-    from decent_array.types import ArrayKey, ArrayTypes
+    from decent_array.types import ArrayKey, ArrayLike, ArrayTypes
     from decent_array.types._dtypes import dtype
 
 
@@ -88,9 +88,23 @@ class Backend(ABC):
     def from_numpy_like(self, x: NDArray[Any], like: Array) -> Array:
         """Convert a Numpy array to an :class:`Array` on this backend, matching shape and type of ``like``."""
 
+    def asarray(self, x: ArrayTypes | Array) -> Array:
+        """
+        Convert `x` into an :class:`~decent_array.Array` on the active backend.
+
+        `x` can be a scalar, a backend-native array/tensor, or :class:`~decent_array.Array`, in which case it acts as
+        the identity.
+
+        """
+        from decent_array._array import Array  # noqa: PLC0415
+
+        if isinstance(x, Array):
+            return x
+        return Array(self.native_asarray(x))
+
     @abstractmethod
-    def asarray(self, x: bool | int | float | complex) -> Array:
-        """Convert a Python scalar to an :class:`Array` on this backend."""
+    def native_asarray(self, x: ArrayTypes) -> ArrayLike:
+        """Wrap the backend-native asarray operation."""
 
     @abstractmethod
     def to_scalar(self, x: Array) -> Any:  # noqa: ANN401
@@ -191,12 +205,12 @@ class Backend(ABC):
         """Maximum of ``x`` along ``axis``."""
 
     @abstractmethod
-    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        """Return True if any element of ``x`` is truthy."""
+    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        """Test whether any array element along axis is truthy."""
 
     @abstractmethod
-    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        """Return True if all elements of ``x`` are truthy."""
+    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        """Test whether all array elements along axis are truthy."""
 
     # Math elementwise — both operands may be Array or scalar (operator dunders pass
     # either). ``Array | float`` covers both because PEP 484's numeric tower implicitly

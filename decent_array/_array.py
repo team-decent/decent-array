@@ -89,7 +89,7 @@ class Array:
                 "Call set_backend() to initialize the interoperability layer."
             )
 
-        self.value: Any = value
+        self.value: Any = _BACKEND_INSTANCE.native_asarray(value)
         self._backend: Backend = _BACKEND_INSTANCE
 
     # Binary arithmetic ----------------------------------------------------
@@ -444,16 +444,6 @@ class Array:
     def mT(self) -> Array:  # noqa: N802
         """Return the matrix transpose (last two dimensions swapped)."""
         return self._backend.matrix_transpose(self)
-
-    @property
-    def any(self) -> bool:
-        """Return True if any element of the array is truthy."""
-        return self._backend.any(self)
-
-    @property
-    def all(self) -> bool:
-        """Return True if all elements of the array are truthy."""
-        return self._backend.all(self)
 
     @property
     def device(self) -> Devices:

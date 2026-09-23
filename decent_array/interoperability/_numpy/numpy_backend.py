@@ -25,7 +25,7 @@ from decent_array._errors import (
 from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
+from decent_array.types import ArrayKey, ArrayLike, ArrayTypes, Devices, Frameworks
 from decent_array.types._dtypes import dtype
 
 
@@ -84,8 +84,9 @@ class NumpyBackend(Backend):
         # NumPy has no device dimension, so only the dtype of ``like`` matters.
         return Array(np.asarray(x, dtype=like.value.dtype))
 
-    def asarray(self, x: bool | int | float | complex) -> Array:
-        return Array(np.array(x))
+    def native_asarray(self, x: ArrayTypes) -> ArrayLike:
+        """Wrap the backend-native asarray operation."""
+        return np.asarray(x)
 
     def to_scalar(self, x: Array) -> Any:  # noqa: ANN401
         """
@@ -194,17 +195,17 @@ class NumpyBackend(Backend):
             return Array(np.max(v, axis=axis, keepdims=True))
         return Array(np.max(v, axis=axis))
 
-    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
+    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
         v = cast("np.ndarray[Any, Any]", x.value)
         if keepdims:
-            return bool(np.any(v, axis=axis, keepdims=True))
-        return bool(np.any(v, axis=axis))
+            return Array(np.any(v, axis=axis, keepdims=True))
+        return Array(np.any(v, axis=axis, keepdims=False))
 
-    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
+    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
         v = cast("np.ndarray[Any, Any]", x.value)
         if keepdims:
-            return bool(np.all(v, axis=axis, keepdims=True))
-        return bool(np.all(v, axis=axis))
+            return Array(np.all(v, axis=axis, keepdims=True))
+        return Array(np.all(v, axis=axis, keepdims=False))
 
     # Math elementwise — operands may be Array or scalar (operator dunders pass either).
     # ``Array | float`` covers both: PEP 484's numeric tower implicitly admits ``int``.

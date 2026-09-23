@@ -28,7 +28,7 @@ from decent_array._errors import (
 from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
+from decent_array.types import ArrayKey, ArrayLike, ArrayTypes, Devices, Frameworks
 from decent_array.types._dtypes import dtype
 
 
@@ -98,11 +98,12 @@ class TensorflowBackend(Backend):
         with tf.device(v.device):
             return Array(tf.convert_to_tensor(x, dtype=v.dtype))
 
-    def asarray(self, x: bool | int | float | complex) -> Array:
-        """Convert a Python scalar to an :class:`Array` on this backend."""
+    def native_asarray(self, x: ArrayTypes) -> ArrayLike:
+        """Wrap the backend-native asarray operation."""
+        # TensorFlow's type stubs do not cover all inputs accepted by
+        # convert_to_tensor at runtime.
         with tf.device(self._native_device):
-            # Its not a tf tensor but mypyc doesn't import tf so it complains about unsude type-ignores
-            return Array(tf.convert_to_tensor(cast("tf.Tensor", x)))
+            return tf.convert_to_tensor(cast("Any", x))
 
     def to_scalar(self, x: Array) -> Any:  # noqa: ANN401
         """
@@ -210,11 +211,11 @@ class TensorflowBackend(Backend):
     def max(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
         return Array(tf.reduce_max(x.value, axis=axis, keepdims=keepdims))
 
-    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(tf.reduce_any(tf.cast(x.value, tf.bool), axis=axis, keepdims=keepdims).numpy())
+    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        return Array(tf.reduce_any(tf.cast(x.value, tf.bool), axis=axis, keepdims=keepdims))
 
-    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(tf.reduce_all(tf.cast(x.value, tf.bool), axis=axis, keepdims=keepdims).numpy())
+    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        return Array(tf.reduce_all(tf.cast(x.value, tf.bool), axis=axis, keepdims=keepdims))
 
     # Math elementwise — TF Tensors are immutable; "in-place" ops rebind the wrapper.
     # Operands may be Array or scalar (operator dunders pass either); ``Array | float``

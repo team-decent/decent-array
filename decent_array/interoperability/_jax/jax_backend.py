@@ -30,7 +30,7 @@ from decent_array._errors import (
 from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
+from decent_array.types import ArrayKey, ArrayLike, ArrayTypes, Devices, Frameworks
 from decent_array.types._dtypes import dtype
 
 
@@ -91,8 +91,9 @@ class JaxBackend(Backend):
         v = like.value
         return Array(jnp.asarray(x, dtype=v.dtype, device=v.device))
 
-    def asarray(self, x: bool | int | float | complex) -> Array:
-        return Array(jnp.array(x, device=self._native_device))
+    def native_asarray(self, x: ArrayTypes) -> ArrayLike:
+        """Wrap the backend-native asarray operation."""
+        return jnp.asarray(x, device=self._native_device)
 
     def to_scalar(self, x: Array) -> Any:  # noqa: ANN401
         """
@@ -187,11 +188,11 @@ class JaxBackend(Backend):
     def max(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
         return Array(jnp.max(x.value, axis=axis, keepdims=keepdims))
 
-    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(jnp.any(x.value, axis=axis, keepdims=keepdims))
+    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        return Array(jnp.any(x.value, axis=axis, keepdims=keepdims))
 
-    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(jnp.all(x.value, axis=axis, keepdims=keepdims))
+    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        return Array(jnp.all(x.value, axis=axis, keepdims=keepdims))
 
     # Math elementwise — JAX arrays are immutable; "in-place" ops rebind the wrapper.
     # Operands may be Array or scalar (operator dunders pass either); ``Array | float``

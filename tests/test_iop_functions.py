@@ -62,6 +62,59 @@ def test_device_of(backend: tuple) -> None:
 
 # Array manipulation -----------------------------------------------------
 
+def test_asarray_existing_array_is_identity(backend: tuple) -> None:
+    arr = Array(4)
+
+    result = iop.asarray(arr)
+
+    assert result is arr
+
+
+def test_asarray_scalar(backend: tuple) -> None:
+    result = iop.asarray(4)
+
+    assert isinstance(result, Array)
+    assert result.shape == ()
+    assert result.size == 1
+    assert result.ndim == 0
+
+
+def test_asarray_native_array(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([1.0, 2.0, 3.0], dtype=np.float32))
+
+    result = iop.asarray(arr.value)
+
+    assert isinstance(result, Array)
+    np.testing.assert_array_equal(_np(result), _np(arr))
+
+
+def test_asarray_numpy_array(backend: tuple) -> None:
+    raw = np.array([1.0, 2.0, 3.0], dtype=np.float32)
+
+    result = iop.asarray(raw)
+
+    assert isinstance(result, Array)
+    np.testing.assert_array_equal(_np(result), raw)
+
+
+def test_asarray_nested_sequence(backend: tuple) -> None:
+    raw = [[1, 2, 3], [4, 5, 6]]
+
+    result = iop.asarray(raw)
+
+    assert isinstance(result, Array)
+    np.testing.assert_array_equal(_np(result), raw)
+
+
+def test_asarray_buffer(backend: tuple) -> None:
+    raw = np.array([1, 2, 3], dtype=np.int32)
+    buffer = memoryview(raw)
+
+    result = iop.asarray(buffer)
+
+    assert isinstance(result, Array)
+    np.testing.assert_array_equal(_np(result), raw)
+
 
 def test_copy_independent(backend: tuple) -> None:
     src = iop.from_numpy(np.array([1.0, 2.0, 3.0], dtype=np.float32))
@@ -331,22 +384,42 @@ def test_max_dim(backend: tuple) -> None:
 
 def test_any_true(backend: tuple) -> None:
     arr = iop.from_numpy(np.array([0.0, 1.0, 0.0], dtype=np.float32))
-    assert iop.any(arr) is True
+    np.testing.assert_array_equal(_np(iop.any(arr)), True)
 
 
 def test_any_false(backend: tuple) -> None:
     arr = iop.from_numpy(np.array([0.0, 0.0, 0.0], dtype=np.float32))
-    assert iop.any(arr) is False
+    np.testing.assert_array_equal(_np(iop.any(arr)), False)
 
 
 def test_all_true(backend: tuple) -> None:
     arr = iop.from_numpy(np.array([1.0, 2.0, 3.0], dtype=np.float32))
-    assert iop.all(arr) is True
+    np.testing.assert_array_equal(_np(iop.all(arr)), True)
 
 
 def test_all_false(backend: tuple) -> None:
     arr = iop.from_numpy(np.array([1.0, 0.0, 3.0], dtype=np.float32))
-    assert iop.all(arr) is False
+    np.testing.assert_array_equal(_np(iop.all(arr)), False)
+
+
+def test_any_dim(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([[0.0, 1.0], [0.0, 0.0]], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.any(arr, axis=0)), [False, True])
+
+
+def test_all_dim(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([[1.0, 1.0], [1.0, 0.0]], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.all(arr, axis=0)), [True, False])
+
+
+def test_any_dim_keepdims(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([[0.0, 1.0], [0.0, 0.0]], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.any(arr, axis=0, keepdims=True)), [[False, True]])
+
+
+def test_all_dim_keepdims(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([[1.0, 1.0], [1.0, 0.0]], dtype=np.float32))
+    np.testing.assert_array_equal(_np(iop.all(arr, axis=0, keepdims=True)), [[True, False]])
 
 
 # Math elementwise -------------------------------------------------------

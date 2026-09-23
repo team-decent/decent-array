@@ -37,6 +37,33 @@ def test_init_records_active_backend(backend: tuple) -> None:
     assert isinstance(arr, Array)
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        True,
+        1,
+        1.0,
+        1.0 + 2.0j,
+        np.int32(1),
+        np.float32(1.0),
+        np.complex64(1.0 + 2.0j),
+    ],
+)
+def test_init_converts_to_backend_array(value, backend: tuple) -> None:
+    arr = Array(value)
+
+    assert isinstance(arr, Array)
+    assert arr.ndim == 0
+    assert arr.size == 1
+    assert arr.shape == ()
+
+
+def test_init_scalar_value(backend: tuple) -> None:
+    arr = Array(4)
+
+    np.testing.assert_array_equal(iop.to_numpy(arr), np.array(4))
+
+
 # Binary arithmetic -------------------------------------------------------
 
 
@@ -526,26 +553,6 @@ def test_mT_raises_for_rank_lt_2(backend: tuple) -> None:
         a = iop.from_numpy(raw)
         with pytest.raises(ValueError, match=r"at least 2 dimensions"):
             _ = a.mT
-
-
-def test_any_true(backend: tuple) -> None:
-    a = _create_array([0.0, 0.0, 1.0])
-    assert a.any is True
-
-
-def test_any_false(backend: tuple) -> None:
-    a = _create_array([0.0, 0.0, 0.0])
-    assert a.any is False
-
-
-def test_all_true(backend: tuple) -> None:
-    a = _create_array([1.0, 2.0, 3.0])
-    assert a.all is True
-
-
-def test_all_false(backend: tuple) -> None:
-    a = _create_array([1.0, 0.0, 3.0])
-    assert a.all is False
 
 
 def test_device_property(backend: tuple) -> None:

@@ -19,7 +19,7 @@ from decent_array._errors import MatrixTransposeError, NDimError, UnsupportedDTy
 from decent_array._utils import is_scalar, unwrap
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
-from decent_array.types import ArrayKey, ArrayTypes, Devices, Frameworks
+from decent_array.types import ArrayKey, ArrayLike, ArrayTypes, Devices, Frameworks
 from decent_array.types._dtypes import dtype
 
 
@@ -88,8 +88,9 @@ class PyTorchBackend(Backend):
         v = like.value
         return Array(torch.from_numpy(x).to(dtype=v.dtype, device=v.device))
 
-    def asarray(self, x: bool | int | float | complex) -> Array:
-        return Array(torch.tensor(x, device=self._native_device))
+    def native_asarray(self, x: ArrayTypes) -> ArrayLike:
+        """Wrap the backend-native asarray operation."""
+        return torch.as_tensor(x, device=self._native_device)
 
     def to_scalar(self, x: Array) -> Any:  # noqa: ANN401
         """
@@ -201,11 +202,11 @@ class PyTorchBackend(Backend):
             return Array(torch.max(v))
         return Array(torch.amax(v, dim=axis, keepdim=keepdims))
 
-    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(torch.any(x.value, dim=axis, keepdim=keepdims).item())
+    def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        return Array(torch.any(x.value, dim=axis, keepdim=keepdims))
 
-    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> bool:
-        return bool(torch.all(x.value, dim=axis, keepdim=keepdims).item())
+    def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        return Array(torch.all(x.value, dim=axis, keepdim=keepdims))
 
     # Math elementwise — operands may be Array or scalar (operator dunders pass either).
     # ``Array | float`` covers both: PEP 484's numeric tower implicitly admits ``int``.

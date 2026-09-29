@@ -177,6 +177,8 @@ class PyTorchBackend(Backend):
         return Array(torch.linalg.norm(x.value, ord=ord, axis=axis, keepdim=keepdims))
 
     def solve(self, x1: Array, x2: Array) -> Array:
+        if x1.value.device.type == "mps":
+            return Array(torch.linalg.solve(x1.value.cpu(), x2.value.cpu()).to(x1.value.device))
         return Array(torch.linalg.solve(x1.value, x2.value))
 
     def eigvalsh(self, x: Array) -> Array:

@@ -84,3 +84,17 @@ def norm(
     if _BACKEND_INSTANCE is None:
         raise no_backend_error
     return _BACKEND_INSTANCE.vector_norm(x, axis, keepdims, ord)
+
+
+def solve(x1: Array, x2: Array) -> Array:
+    """Solve the linear system ``x1 @ solution = x2``."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.solve(x1, x2)
+
+
+def eigvalsh(x: Array) -> Array:
+    """Return eigenvalues of a symmetric/Hermitian matrix."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.eigvalsh(x)

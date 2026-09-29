@@ -23,7 +23,7 @@ from ._iop.bit_operators import (
 )
 from ._iop.comparison import equal, greater, greater_equal, less, less_equal, not_equal
 from ._iop.creation import eye, ones, ones_like, zeros, zeros_like
-from ._iop.linalg import dot, matmul, norm, vecdot, vector_norm
+from ._iop.linalg import dot, eigvalsh, matmul, norm, solve, vecdot, vector_norm
 from ._iop.manipulations import (
     asarray,
     astype,
@@ -49,10 +49,12 @@ from ._iop.math import (
     absolute,
     add,
     divide,
+    exp,
     floor_divide,
     isfinite,
     isinf,
     isnan,
+    logaddexp,
     multiply,
     negative,
     positive,
@@ -60,6 +62,7 @@ from ._iop.math import (
     remainder,
     sqrt,
     subtract,
+    where,
 )
 from ._iop.operators import argmax, argmin, maximum, sign
 from ._iop.reductions import all, any, max, mean, min, sum  # noqa: A004
@@ -103,7 +106,9 @@ __all__ = [
     "diagonal",
     "divide",
     "dot",
+    "eigvalsh",
     "equal",
+    "exp",
     "expand_dims",
     "eye",
     "floor_divide",
@@ -119,6 +124,7 @@ __all__ = [
     "isnan",
     "less",
     "less_equal",
+    "logaddexp",
     "matmul",
     "matrix_transpose",
     "max",
@@ -144,6 +150,7 @@ __all__ = [
     "shape",
     "sign",
     "size",
+    "solve",
     "sqrt",
     "squeeze",
     "stack",
@@ -156,6 +163,7 @@ __all__ = [
     "unsqueeze",
     "vecdot",
     "vector_norm",
+    "where",
     "zeros",
     "zeros_like",
 ]

@@ -186,6 +186,14 @@ class Backend(ABC):
     ) -> Array:
         """Compute the norm of ``x``."""
 
+    @abstractmethod
+    def solve(self, x1: Array, x2: Array) -> Array:
+        """Solve the linear system ``x1 @ solution = x2``."""
+
+    @abstractmethod
+    def eigvalsh(self, x: Array) -> Array:
+        """Return eigenvalues of a symmetric/Hermitian matrix."""
+
     # Math reductions -----------------------------------------------------
 
     @abstractmethod
@@ -283,6 +291,23 @@ class Backend(ABC):
     @abstractmethod
     def sqrt(self, x: Array) -> Array:
         """Element-wise square root."""
+
+    @abstractmethod
+    def exp(self, x: Array) -> Array:
+        """Element-wise exponential."""
+
+    @abstractmethod
+    def logaddexp(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        """Element-wise log(exp(x1) + exp(x2)) computed stably."""
+
+    @abstractmethod
+    def where(
+        self,
+        condition: Array,
+        x1: bool | int | float | complex | Array,
+        x2: bool | int | float | complex | Array,
+    ) -> Array:
+        """Select elements from ``x1`` or ``x2`` according to ``condition``."""
 
     @abstractmethod
     def isfinite(self, x: Array) -> Array:

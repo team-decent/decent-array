@@ -197,6 +197,15 @@ class TensorflowBackend(Backend):
         axis = axis if axis is not None else (-2, -1) if v.ndim == 2 else None
         return Array(tf.norm(v, ord=ord, axis=axis, keepdims=keepdims))
 
+    def solve(self, x1: Array, x2: Array) -> Array:
+        rhs = x2.value
+        if rhs.shape.rank == x1.value.shape.rank - 1:
+            return Array(tf.squeeze(tf.linalg.solve(x1.value, tf.expand_dims(rhs, axis=-1)), axis=-1))
+        return Array(tf.linalg.solve(x1.value, rhs))
+
+    def eigvalsh(self, x: Array) -> Array:
+        return Array(tf.linalg.eigvalsh(x.value))
+
     # Math reductions
 
     def sum(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
@@ -278,6 +287,20 @@ class TensorflowBackend(Backend):
 
     def sqrt(self, x: Array) -> Array:
         return Array(tf.sqrt(x.value))
+
+    def exp(self, x: Array) -> Array:
+        return Array(tf.exp(x.value))
+
+    def logaddexp(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        return Array(tf.keras.ops.logaddexp(unwrap(x1), unwrap(x2)))
+
+    def where(
+        self,
+        condition: Array,
+        x1: bool | int | float | complex | Array,
+        x2: bool | int | float | complex | Array,
+    ) -> Array:
+        return Array(tf.where(condition.value, unwrap(x1), unwrap(x2)))
 
     def isfinite(self, x: Array) -> Array:
         """Element-wise test for finite values."""

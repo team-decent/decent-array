@@ -174,6 +174,12 @@ class JaxBackend(Backend):
     ) -> Array:
         return Array(jnp.linalg.norm(x.value, ord=ord, axis=axis, keepdims=keepdims))
 
+    def solve(self, x1: Array, x2: Array) -> Array:
+        return Array(jnp.linalg.solve(x1.value, x2.value))
+
+    def eigvalsh(self, x: Array) -> Array:
+        return Array(jnp.linalg.eigvalsh(x.value))
+
     # Math reductions
 
     def sum(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
@@ -255,6 +261,20 @@ class JaxBackend(Backend):
 
     def sqrt(self, x: Array) -> Array:
         return Array(jnp.sqrt(x.value))
+
+    def exp(self, x: Array) -> Array:
+        return Array(jnp.exp(x.value))
+
+    def logaddexp(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        return Array(jnp.logaddexp(unwrap(x1), unwrap(x2)))
+
+    def where(
+        self,
+        condition: Array,
+        x1: bool | int | float | complex | Array,
+        x2: bool | int | float | complex | Array,
+    ) -> Array:
+        return Array(jnp.where(condition.value, unwrap(x1), unwrap(x2)))
 
     def isfinite(self, x: Array) -> Array:
         """Element-wise test for finite values."""

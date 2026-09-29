@@ -149,6 +149,31 @@ def sqrt(x: Array) -> Array:
     return _BACKEND_INSTANCE.sqrt(x)
 
 
+def exp(x: Array) -> Array:
+    """Element-wise exponential."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.exp(x)
+
+
+def logaddexp(x1: int | float | Array, x2: int | float | Array) -> Array:
+    """Element-wise log(exp(x1) + exp(x2)) computed stably."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.logaddexp(x1, x2)
+
+
+def where(
+    condition: Array,
+    x1: bool | int | float | complex | Array,
+    x2: bool | int | float | complex | Array,
+) -> Array:
+    """Select elements from ``x1`` or ``x2`` according to ``condition``."""
+    if _BACKEND_INSTANCE is None:
+        raise no_backend_error
+    return _BACKEND_INSTANCE.where(condition, x1, x2)
+
+
 def isfinite(x: Array) -> Array:
     """Element-wise test for finite values."""
     if _BACKEND_INSTANCE is None:

@@ -169,6 +169,12 @@ class NumpyBackend(Backend):
         # but is still typed as int | tuple[int, int] | None, hence the ignore
         return Array(np.linalg.vector_norm(x.value, ord=ord, axis=axis, keepdims=keepdims))  # type: ignore[arg-type]
 
+    def solve(self, x1: Array, x2: Array) -> Array:
+        return Array(np.linalg.solve(x1.value, x2.value))
+
+    def eigvalsh(self, x: Array) -> Array:
+        return Array(np.linalg.eigvalsh(x.value))
+
     # Math reductions
 
     def sum(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
@@ -267,6 +273,20 @@ class NumpyBackend(Backend):
 
     def sqrt(self, x: Array) -> Array:
         return Array(np.sqrt(x.value))
+
+    def exp(self, x: Array) -> Array:
+        return Array(np.exp(x.value))
+
+    def logaddexp(self, x1: int | float | Array, x2: int | float | Array) -> Array:
+        return Array(np.logaddexp(unwrap(x1), unwrap(x2)))
+
+    def where(
+        self,
+        condition: Array,
+        x1: bool | int | float | complex | Array,
+        x2: bool | int | float | complex | Array,
+    ) -> Array:
+        return Array(np.where(condition.value, unwrap(x1), unwrap(x2)))
 
     def isfinite(self, x: Array) -> Array:
         """Element-wise test for finite values."""

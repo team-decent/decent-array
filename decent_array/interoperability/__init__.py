@@ -22,7 +22,7 @@ from ._iop.bit_operators import (
     bitwise_xor,
 )
 from ._iop.comparison import equal, greater, greater_equal, less, less_equal, not_equal
-from ._iop.creation import eye, ones, ones_like, zeros, zeros_like
+from ._iop.creation import arange, empty, empty_like, eye, linspace, ones, ones_like, zeros, zeros_like
 from ._iop.linalg import dot, eigvalsh, matmul, norm, solve, vecdot, vector_norm
 from ._iop.manipulations import (
     asarray,
@@ -87,6 +87,7 @@ __all__ = [
     "add",
     "all",
     "any",
+    "arange",
     "argmax",
     "argmin",
     "asarray",
@@ -107,6 +108,8 @@ __all__ = [
     "divide",
     "dot",
     "eigvalsh",
+    "empty",
+    "empty_like",
     "equal",
     "exp",
     "expand_dims",
@@ -124,6 +127,7 @@ __all__ = [
     "isnan",
     "less",
     "less_equal",
+    "linspace",
     "logaddexp",
     "matmul",
     "matrix_transpose",

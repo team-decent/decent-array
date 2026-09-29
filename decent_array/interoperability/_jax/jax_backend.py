@@ -46,6 +46,12 @@ class JaxBackend(Backend):
 
     # Array creation
 
+    def empty(self, shape: int | tuple[int, ...]) -> Array:
+        return Array(jnp.empty(shape, device=self._native_device))
+
+    def empty_like(self, x: Array, /) -> Array:
+        return Array(jnp.empty_like(x.value, device=self._native_device))
+
     def zeros(self, shape: int | tuple[int, ...]) -> Array:
         return Array(jnp.zeros(shape, device=self._native_device))
 
@@ -58,8 +64,22 @@ class JaxBackend(Backend):
     def ones_like(self, x: Array) -> Array:
         return Array(jnp.ones_like(x.value))
 
-    def eye(self, n: int) -> Array:
-        return Array(jnp.eye(n, device=self._native_device))
+    def eye(self, n_rows: int, n_cols: int | None = None, /, *, k: int = 0) -> Array:
+        return Array(jnp.eye(n_rows, n_cols, k=k, device=self._native_device))
+
+    def arange(self, start: int | float, /, stop: int | float | None = None, step: int | float = 1) -> Array:
+        return Array(jnp.arange(start, stop, step, device=self._native_device))
+
+    def linspace(
+        self,
+        start: int | float | complex,
+        stop: int | float | complex,
+        /,
+        num: int,
+        *,
+        endpoint: bool = True,
+    ) -> Array:
+        return Array(jnp.linspace(start, stop, num, endpoint=endpoint, device=self._native_device))
 
     def device_to_native(self, device: Devices) -> jax.Device:
         if device == Devices.CPU:

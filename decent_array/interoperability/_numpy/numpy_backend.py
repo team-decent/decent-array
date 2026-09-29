@@ -40,6 +40,12 @@ class NumpyBackend(Backend):
 
     # Array creation
 
+    def empty(self, shape: int | tuple[int, ...]) -> Array:
+        return Array(np.empty(shape))
+
+    def empty_like(self, x: Array, /) -> Array:
+        return Array(np.empty_like(x.value))
+
     def zeros(self, shape: int | tuple[int, ...]) -> Array:
         return Array(np.zeros(shape))
 
@@ -52,8 +58,22 @@ class NumpyBackend(Backend):
     def ones_like(self, x: Array) -> Array:
         return Array(np.ones_like(x.value))
 
-    def eye(self, n: int) -> Array:
-        return Array(np.eye(n))
+    def eye(self, n_rows: int, n_cols: int | None = None, /, *, k: int = 0) -> Array:
+        return Array(np.eye(n_rows, n_cols, k=k))
+
+    def arange(self, start: int | float, /, stop: int | float | None = None, step: int | float = 1) -> Array:
+        return Array(np.arange(start, stop, step))
+
+    def linspace(
+        self,
+        start: int | float | complex,
+        stop: int | float | complex,
+        /,
+        num: int,
+        *,
+        endpoint: bool = True,
+    ) -> Array:
+        return Array(np.linspace(start, stop, num, endpoint=endpoint))
 
     def device_to_native(self, device: Devices) -> Any:  # noqa: ANN401
         # NumPy has no explicit device management; surface the request unchanged.

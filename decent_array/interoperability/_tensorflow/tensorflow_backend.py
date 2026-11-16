@@ -25,7 +25,7 @@ from decent_array._errors import (
     UnsupportedDTypeCreationError,
     stack_empty_error,
 )
-from decent_array._utils import is_scalar, unwrap
+from decent_array._utils import is_scalar, unwrap, unwrap_key
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayLike, ArrayTypes, Devices, Frameworks
@@ -46,7 +46,7 @@ class TensorflowBackend(Backend):
 
     def empty(self, shape: int | tuple[int, ...]) -> Array:
         with tf.device(self._native_device):
-            return Array(tf.experimental.numpy.empty(shape))
+            return Array(tf.experimental.numpy.empty(shape, dtype=tf.float32))
 
     def empty_like(self, x: Array, /) -> Array:
         with tf.device(self._native_device):
@@ -68,7 +68,7 @@ class TensorflowBackend(Backend):
 
     def eye(self, n_rows: int, n_cols: int | None = None, /, *, k: int = 0) -> Array:
         with tf.device(self._native_device):
-            return Array(tf.experimental.numpy.eye(n_rows, n_cols, k=k))
+            return Array(tf.experimental.numpy.eye(n_rows, n_cols, k=k, dtype=tf.float32))
 
     def arange(self, start: int | float, /, stop: int | float | None = None, step: int | float = 1) -> Array:
         with tf.device(self._native_device):
@@ -233,15 +233,23 @@ class TensorflowBackend(Backend):
     # Math reductions
 
     def sum(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(tf.reduce_sum(x.value, axis=axis, keepdims=keepdims))
+        v = tf.cast(x.value, tf.int64) if x.value.dtype == tf.bool else x.value
+        return Array(tf.reduce_sum(v, axis=axis, keepdims=keepdims))
 
     def mean(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(tf.reduce_mean(x.value, axis=axis, keepdims=keepdims))
+        v = x.value
+        if not v.dtype.is_floating and not v.dtype.is_complex:
+            v = tf.cast(v, tf.float32)
+        return Array(tf.reduce_mean(v, axis=axis, keepdims=keepdims))
 
     def min(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        if x.value.dtype == tf.bool:
+            return Array(tf.reduce_all(x.value, axis=axis, keepdims=keepdims))
         return Array(tf.reduce_min(x.value, axis=axis, keepdims=keepdims))
 
     def max(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        if x.value.dtype == tf.bool:
+            return Array(tf.reduce_any(x.value, axis=axis, keepdims=keepdims))
         return Array(tf.reduce_max(x.value, axis=axis, keepdims=keepdims))
 
     def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
@@ -328,15 +336,30 @@ class TensorflowBackend(Backend):
 
     def isfinite(self, x: Array) -> Array:
         """Element-wise test for finite values."""
-        return Array(tf.math.is_finite(x.value))
+        v = x.value
+        if v.dtype.is_complex:
+            return Array(tf.math.is_finite(tf.math.real(v)) & tf.math.is_finite(tf.math.imag(v)))
+        if not v.dtype.is_floating:
+            return Array(tf.ones_like(v, dtype=tf.bool))
+        return Array(tf.math.is_finite(v))
 
     def isinf(self, x: Array) -> Array:
         """Element-wise test for infinite values."""
-        return Array(tf.math.is_inf(x.value))
+        v = x.value
+        if v.dtype.is_complex:
+            return Array(tf.math.is_inf(tf.math.real(v)) | tf.math.is_inf(tf.math.imag(v)))
+        if not v.dtype.is_floating:
+            return Array(tf.zeros_like(v, dtype=tf.bool))
+        return Array(tf.math.is_inf(v))
 
     def isnan(self, x: Array) -> Array:
         """Element-wise test for NaN values."""
-        return Array(tf.math.is_nan(x.value))
+        v = x.value
+        if v.dtype.is_complex:
+            return Array(tf.math.is_nan(tf.math.real(v)) | tf.math.is_nan(tf.math.imag(v)))
+        if not v.dtype.is_floating:
+            return Array(tf.zeros_like(v, dtype=tf.bool))
+        return Array(tf.math.is_nan(v))
 
     # Comparisons
 
@@ -442,12 +465,17 @@ class TensorflowBackend(Backend):
         # that hammer set_item in tight loops should consider numpy or pytorch.
         original = x.value
         np_array = original.numpy().copy()
-        np_array[key] = np.asarray(unwrap(value))
+        norm_key = unwrap_key(key)
+        if isinstance(norm_key, tuple):
+            norm_key = tuple(k.numpy() if isinstance(k, tf.Tensor) else k for k in norm_key)
+        elif isinstance(norm_key, tf.Tensor):
+            norm_key = norm_key.numpy()
+        np_array[norm_key] = np.asarray(unwrap(value))
         with tf.device(self._native_device):
             x.value = tf.convert_to_tensor(np_array, dtype=original.dtype)
 
     def get_item(self, x: Array, key: ArrayKey) -> Array:
-        return Array(x.value[key])
+        return Array(x.value[unwrap_key(key)])
 
     # RNG
 

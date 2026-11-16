@@ -522,6 +522,29 @@ def test_all_dim_keepdims(backend: tuple) -> None:
     np.testing.assert_array_equal(_np(iop.all(arr, axis=0, keepdims=True)), [[True, False]])
 
 
+def test_mean_bool_and_int(backend: tuple) -> None:
+    bool_arr = iop.from_numpy(np.array([[True, False], [True, True]], dtype=np.bool_))
+    np.testing.assert_allclose(_np(iop.mean(bool_arr)), 0.75)
+    np.testing.assert_allclose(_np(iop.mean(bool_arr, axis=1)), [0.5, 1.0])
+
+    int_arr = iop.from_numpy(np.array([1, 2, 3, 4], dtype=np.int32))
+    np.testing.assert_allclose(_np(iop.mean(int_arr)), 2.5)
+
+
+def test_reductions_bool_and_uint8(backend: tuple) -> None:
+    bool_arr = iop.from_numpy(np.array([[True, False], [True, True]], dtype=np.bool_))
+    np.testing.assert_array_equal(_np(iop.sum(bool_arr)), 3)
+    np.testing.assert_array_equal(_np(iop.sum(bool_arr, axis=0)), [2, 1])
+    assert iop.min(bool_arr).dtype == da.bool_
+    assert iop.max(bool_arr).dtype == da.bool_
+    np.testing.assert_array_equal(_np(iop.min(bool_arr, axis=1)), [False, True])
+    np.testing.assert_array_equal(_np(iop.max(bool_arr, axis=0)), [True, True])
+
+    uint8_arr = iop.from_numpy(np.array([0, 1, 2], dtype=np.uint8))
+    assert iop.any(uint8_arr).dtype == da.bool_
+    assert iop.all(uint8_arr).dtype == da.bool_
+
+
 # Math elementwise -------------------------------------------------------
 
 
@@ -664,6 +687,22 @@ def test_isinf(backend: tuple) -> None:
 def test_isnan(backend: tuple) -> None:
     arr = iop.from_numpy(np.array([1.0, np.inf, -np.inf, np.nan], dtype=np.float32))
     np.testing.assert_array_equal(_np(iop.isnan(arr)), [False, False, False, True])
+
+
+@pytest.mark.parametrize("dtype", [np.bool_, np.int32, np.uint8])
+def test_finiteness_checks_non_float(backend: tuple, dtype: type[np.generic]) -> None:
+    arr = iop.from_numpy(np.array([0, 1, 1], dtype=dtype))
+    for fn, expected in ((iop.isfinite, True), (iop.isinf, False), (iop.isnan, False)):
+        out = fn(arr)
+        assert out.dtype == da.bool_
+        np.testing.assert_array_equal(_np(out), [expected, expected, expected])
+
+
+def test_finiteness_checks_complex(backend: tuple) -> None:
+    arr = iop.from_numpy(np.array([1.0 + 2.0j, np.inf + 0.0j, 0.0 + np.nan * 1j], dtype=np.complex64))
+    np.testing.assert_array_equal(_np(iop.isfinite(arr)), [True, False, False])
+    np.testing.assert_array_equal(_np(iop.isinf(arr)), [False, True, False])
+    np.testing.assert_array_equal(_np(iop.isnan(arr)), [False, False, True])
 
 
 # Operators --------------------------------------------------------------
@@ -872,6 +911,31 @@ def test_set_item_function(backend: tuple) -> None:
 def test_get_item_function(backend: tuple) -> None:
     arr = iop.from_numpy(np.array([1.0, 2.0, 3.0], dtype=np.float32))
     np.testing.assert_allclose(_np(get_item(arr, 1)), 2.0)
+
+
+def test_supports_index_and_array_keys(backend: tuple) -> None:
+    class CustomIndex:
+        def __init__(self, idx: int) -> None:
+            self._idx = idx
+
+        def __index__(self) -> int:
+            return self._idx
+
+    mat = iop.from_numpy(np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32))
+    i0, i1 = CustomIndex(0), CustomIndex(1)
+    np.testing.assert_allclose(_np(mat[i0, i1]), 2.0)
+    mat[i1, i0] = 9.0
+    np.testing.assert_allclose(_np(mat[i1, i0]), 9.0)
+
+    mask = mat > 2.5
+    np.testing.assert_allclose(_np(mat[mask]), [9.0, 4.0])
+
+
+def test_creation_default_float_dtype_consistent(backend: tuple) -> None:
+    expected = iop.zeros((2, 2)).dtype
+    assert iop.ones((2, 2)).dtype == expected
+    assert iop.empty((2, 2)).dtype == expected
+    assert iop.eye(2).dtype == expected
 
 
 # No-backend errors ------------------------------------------------------

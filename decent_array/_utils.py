@@ -16,16 +16,18 @@ def unwrap(x: Any) -> Any:  # noqa: ANN401
 
 
 def unwrap_key(key: Any) -> Any:  # noqa: ANN401
-    """Normalize an indexing key by unwrapping :class:`Array` items and custom ``__index__`` objects."""
+    """
+    Normalize an indexing key for the native framework.
+
+    Unwraps :class:`Array` items and converts custom ``SupportsIndex`` objects (e.g. ``W[agent_i, agent_j]``)
+    to ``int``, since TensorFlow and JAX reject them. Native arrays/scalars (which expose ``shape``) and
+    ``bool`` (which numpy treats as a new axis) are passed through unchanged.
+    """
     if type(key) is Array:
         return key.value
-    if isinstance(key, tuple):
+    if type(key) is tuple:
         return tuple(unwrap_key(k) for k in key)
-    if (
-        not isinstance(key, int | slice | type(None) | type(Ellipsis))
-        and not hasattr(key, "shape")
-        and hasattr(key, "__index__")
-    ):
+    if not isinstance(key, int) and hasattr(key, "__index__") and not hasattr(key, "shape"):
         return operator.index(key)
     return key
 

@@ -233,23 +233,19 @@ class TensorflowBackend(Backend):
     # Math reductions
 
     def sum(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        v = tf.cast(x.value, tf.int64) if x.value.dtype == tf.bool else x.value
-        return Array(tf.reduce_sum(v, axis=axis, keepdims=keepdims))
+        return Array(tf.reduce_sum(x.value, axis=axis, keepdims=keepdims))
 
     def mean(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
+        # tf.reduce_mean rejects bool and truncates integer means; promote to float like numpy.
         v = x.value
         if not v.dtype.is_floating and not v.dtype.is_complex:
             v = tf.cast(v, tf.float32)
         return Array(tf.reduce_mean(v, axis=axis, keepdims=keepdims))
 
     def min(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        if x.value.dtype == tf.bool:
-            return Array(tf.reduce_all(x.value, axis=axis, keepdims=keepdims))
         return Array(tf.reduce_min(x.value, axis=axis, keepdims=keepdims))
 
     def max(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        if x.value.dtype == tf.bool:
-            return Array(tf.reduce_any(x.value, axis=axis, keepdims=keepdims))
         return Array(tf.reduce_max(x.value, axis=axis, keepdims=keepdims))
 
     def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
@@ -334,11 +330,11 @@ class TensorflowBackend(Backend):
     ) -> Array:
         return Array(tf.where(condition.value, unwrap(x1), unwrap(x2)))
 
+    # tf.math.is_* only accept real floats; integer/bool values are always finite and never inf/nan.
+
     def isfinite(self, x: Array) -> Array:
         """Element-wise test for finite values."""
         v = x.value
-        if v.dtype.is_complex:
-            return Array(tf.math.is_finite(tf.math.real(v)) & tf.math.is_finite(tf.math.imag(v)))
         if not v.dtype.is_floating:
             return Array(tf.ones_like(v, dtype=tf.bool))
         return Array(tf.math.is_finite(v))
@@ -346,8 +342,6 @@ class TensorflowBackend(Backend):
     def isinf(self, x: Array) -> Array:
         """Element-wise test for infinite values."""
         v = x.value
-        if v.dtype.is_complex:
-            return Array(tf.math.is_inf(tf.math.real(v)) | tf.math.is_inf(tf.math.imag(v)))
         if not v.dtype.is_floating:
             return Array(tf.zeros_like(v, dtype=tf.bool))
         return Array(tf.math.is_inf(v))
@@ -355,8 +349,6 @@ class TensorflowBackend(Backend):
     def isnan(self, x: Array) -> Array:
         """Element-wise test for NaN values."""
         v = x.value
-        if v.dtype.is_complex:
-            return Array(tf.math.is_nan(tf.math.real(v)) | tf.math.is_nan(tf.math.imag(v)))
         if not v.dtype.is_floating:
             return Array(tf.zeros_like(v, dtype=tf.bool))
         return Array(tf.math.is_nan(v))
@@ -465,12 +457,7 @@ class TensorflowBackend(Backend):
         # that hammer set_item in tight loops should consider numpy or pytorch.
         original = x.value
         np_array = original.numpy().copy()
-        norm_key = unwrap_key(key)
-        if isinstance(norm_key, tuple):
-            norm_key = tuple(k.numpy() if isinstance(k, tf.Tensor) else k for k in norm_key)
-        elif isinstance(norm_key, tf.Tensor):
-            norm_key = norm_key.numpy()
-        np_array[norm_key] = np.asarray(unwrap(value))
+        np_array[unwrap_key(key)] = np.asarray(unwrap(value))
         with tf.device(self._native_device):
             x.value = tf.convert_to_tensor(np_array, dtype=original.dtype)
 

@@ -234,6 +234,7 @@ class PyTorchBackend(Backend):
 
     def mean(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
         v = x.value
+        # torch.mean refuses bool/int inputs ("could not infer output dtype"); promote to float like numpy.
         out_dtype = None if v.is_floating_point() or v.is_complex() else torch.get_default_dtype()
         if axis is None:
             return Array(torch.mean(v, dtype=out_dtype))
@@ -252,10 +253,10 @@ class PyTorchBackend(Backend):
         return Array(torch.amax(v, dim=axis, keepdim=keepdims))
 
     def any(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(torch.any(x.value, dim=axis, keepdim=keepdims).to(torch.bool))
+        return Array(torch.any(x.value, dim=axis, keepdim=keepdims))
 
     def all(self, x: Array, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Array:
-        return Array(torch.all(x.value, dim=axis, keepdim=keepdims).to(torch.bool))
+        return Array(torch.all(x.value, dim=axis, keepdim=keepdims))
 
     # Math elementwise — operands may be Array or scalar (operator dunders pass either).
     # ``Array | float`` covers both: PEP 484's numeric tower implicitly admits ``int``.

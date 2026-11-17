@@ -431,8 +431,9 @@ class JaxBackend(Backend):
 
     def _next_key(self) -> jax.Array:
         """Split the stored key, advance state, return a sub-key for one draw."""
-        self._key, sub = jax.random.split(self._key)
-        return cast("jax.Array", sub)
+        self._key, raw_sub = jax.random.split(self._key)
+        sub: jax.Array = raw_sub
+        return sub
 
     # Dtypes
 

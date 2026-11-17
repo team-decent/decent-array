@@ -330,11 +330,14 @@ class TensorflowBackend(Backend):
     ) -> Array:
         return Array(tf.where(condition.value, unwrap(x1), unwrap(x2)))
 
-    # tf.math.is_* only accept real floats; integer/bool values are always finite and never inf/nan.
+    # tf.math.is_* only accept real floats: complex values are checked component-wise (numpy semantics), and
+    # integer/bool values are always finite and never inf/nan.
 
     def isfinite(self, x: Array) -> Array:
         """Element-wise test for finite values."""
         v = x.value
+        if v.dtype.is_complex:
+            return Array(tf.math.is_finite(tf.math.real(v)) & tf.math.is_finite(tf.math.imag(v)))
         if not v.dtype.is_floating:
             return Array(tf.ones_like(v, dtype=tf.bool))
         return Array(tf.math.is_finite(v))
@@ -342,6 +345,8 @@ class TensorflowBackend(Backend):
     def isinf(self, x: Array) -> Array:
         """Element-wise test for infinite values."""
         v = x.value
+        if v.dtype.is_complex:
+            return Array(tf.math.is_inf(tf.math.real(v)) | tf.math.is_inf(tf.math.imag(v)))
         if not v.dtype.is_floating:
             return Array(tf.zeros_like(v, dtype=tf.bool))
         return Array(tf.math.is_inf(v))
@@ -349,6 +354,8 @@ class TensorflowBackend(Backend):
     def isnan(self, x: Array) -> Array:
         """Element-wise test for NaN values."""
         v = x.value
+        if v.dtype.is_complex:
+            return Array(tf.math.is_nan(tf.math.real(v)) | tf.math.is_nan(tf.math.imag(v)))
         if not v.dtype.is_floating:
             return Array(tf.zeros_like(v, dtype=tf.bool))
         return Array(tf.math.is_nan(v))

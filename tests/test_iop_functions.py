@@ -684,6 +684,18 @@ def test_finiteness_checks_non_float(backend: tuple, dtype: type[np.generic]) ->
         np.testing.assert_array_equal(_np(out), [expected, expected, expected])
 
 
+def test_finiteness_checks_complex(backend: tuple) -> None:
+    # Built with complex(re, im): ``np.nan * 1j`` would give nan+nanj and hide component-wise bugs.
+    vals = np.array(
+        [complex(1, 2), complex(np.inf, 0), complex(0, -np.inf), complex(np.nan, 0), complex(0, np.nan)],
+        dtype=np.complex64,
+    )
+    arr = iop.from_numpy(vals)
+    np.testing.assert_array_equal(_np(iop.isfinite(arr)), np.isfinite(vals))  # [T, F, F, F, F]
+    np.testing.assert_array_equal(_np(iop.isinf(arr)), np.isinf(vals))  # [F, T, T, F, F]
+    np.testing.assert_array_equal(_np(iop.isnan(arr)), np.isnan(vals))  # [F, F, F, T, T]
+
+
 # Operators --------------------------------------------------------------
 
 

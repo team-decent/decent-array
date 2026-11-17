@@ -170,6 +170,14 @@ def test_matmul_array(backend: tuple) -> None:
     np.testing.assert_allclose(_np(a @ b), expected)
 
 
+def test_matmul_vector(backend: tuple) -> None:
+    mat = _create_array([[1.0, 2.0], [3.0, 4.0]])
+    vec = _create_array([5.0, 6.0])
+    np.testing.assert_allclose(_np(mat @ vec), [17.0, 39.0])
+    np.testing.assert_allclose(_np(vec @ mat), [23.0, 34.0])
+    np.testing.assert_allclose(_np(vec @ vec), 61.0)
+
+
 def test_rmatmul_explicit_call(backend: tuple) -> None:
     # Python dispatch never picks Array.__rmatmul__ when both operands are Array,
     # so call it directly to exercise the code path.

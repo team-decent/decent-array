@@ -11,13 +11,13 @@ Operator contract is *strict*: binary arithmetic and indexing accept either anot
 
 Hot-path notes:
 
-* ``__add__``/``__sub__``/``__mul__``/``__truediv__``/``__matmul__``, ``__floordiv__``, ``__mod__``,
+* ``__add__``/``__sub__``/``__mul__``/``__truediv__``, ``__floordiv__``, ``__mod__``,
   the unary ``__neg__``/``__abs__``/``__pow__``, the comparisons ``__eq__``/``__ne__``/``__lt__``/
   ``__le__``/``__gt__``/``__ge__`` and the bitwise ``__and__``/``__rand__`` are
   inlined: every supported framework's tensor implements the equivalent operator
   natively with numpy-equivalent semantics, so routing through the interoperability layer
   introduces unnecessary overhead.
-* Operators that *do* go through the backend (in-place math, indexing, properties
+* Operators that *do* go through the backend (``__matmul__``, shifts, in-place math, indexing, properties
   like ``shape``/``transpose``) read the cached ``_backend`` slot.
 * Overriding ``__eq__`` makes :class:`Array` unhashable (Python clears ``__hash__``
   automatically). This matches numpy/torch/jax/tf, where element-wise equality is
@@ -144,11 +144,11 @@ class Array:
 
     def __matmul__(self, other: Array, /) -> Array:
         """Return the matrix multiplication of the array with ``other``."""
-        return Array(self.value @ other.value)
+        return self._backend.matmul(self, other)
 
     def __rmatmul__(self, other: Array, /) -> Array:
         """Return the matrix multiplication of ``other`` with the array."""
-        return Array(other.value @ self.value)
+        return self._backend.matmul(other, self)
 
     def __pow__(self, other: int | float | complex | Array, /) -> Array:
         """Exponentiate the array element-wise."""

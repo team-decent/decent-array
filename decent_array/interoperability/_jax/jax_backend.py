@@ -27,7 +27,7 @@ from decent_array._errors import (
     UnsupportedDTypeCreationError,
     stack_empty_error,
 )
-from decent_array._utils import is_scalar, unwrap
+from decent_array._utils import is_scalar, unwrap, unwrap_key
 from decent_array.interoperability._abstracts import Backend
 from decent_array.interoperability._backend_manager import register_backend
 from decent_array.types import ArrayKey, ArrayLike, ArrayTypes, Devices, Frameworks
@@ -384,10 +384,10 @@ class JaxBackend(Backend):
 
     def set_item(self, x: Array, key: ArrayKey, value: bool | int | float | complex | Array) -> None:
         # JAX arrays are immutable; rebind the wrapper to a new array with `key` updated.
-        x.value = x.value.at[key].set(unwrap(value))
+        x.value = x.value.at[unwrap_key(key)].set(unwrap(value))
 
     def get_item(self, x: Array, key: ArrayKey) -> Array:
-        return Array(x.value[key])
+        return Array(x.value[unwrap_key(key)])
 
     # RNG
 
@@ -431,8 +431,9 @@ class JaxBackend(Backend):
 
     def _next_key(self) -> jax.Array:
         """Split the stored key, advance state, return a sub-key for one draw."""
-        self._key, sub = jax.random.split(self._key)
-        return cast("jax.Array", sub)
+        self._key, raw_sub = jax.random.split(self._key)
+        sub: jax.Array = raw_sub
+        return sub
 
     # Dtypes
 
